@@ -40,7 +40,7 @@ export function generateEmptyGrid(
 
 export function generateMaze(
   grid: Cell[][],
-  type: 'random' | 'walls' = 'random'
+  _type: 'random' | 'walls' = 'random'
 ): Cell[][] {
   const rows = grid.length;
   const cols = grid[0].length;
