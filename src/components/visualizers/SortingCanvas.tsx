@@ -45,8 +45,9 @@ export function SortingCanvas({
     (_ctx: CanvasRenderingContext2D, _frame: number) => {
       const canvasWidth = _ctx.canvas.width;
       const canvasHeight = _ctx.canvas.height;
-      const currentData = dataRef.current;
       const currentStep = stepRef.current;
+      // Use the array snapshot stored in the step (reflects actual sort progress)
+      const currentData = currentStep.array.length > 0 ? currentStep.array : dataRef.current;
 
       _ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 

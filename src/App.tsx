@@ -44,22 +44,27 @@ function App() {
     const cols = 20;
     let grid = generateEmptyGrid(rows, cols);
     if (type === 'random') {
-      grid = generateMaze(grid, 'random', 0.3);
+      grid = generateMaze(grid, 'random', 0.3) as any;
     }
-  }, []);
-
-  const generateInitialData = useCallback(() => {
-    if (category === 'sorting') {
-      const data = generateRandomArray(20);
-      state.setInputData(data);
-    } else if (category === 'pathfinding') {
-      state.setGridSize(20, 20);
-    }
-  }, [category]);
+    state.setGridData(grid);
+  }, [state]);
 
   useEffect(() => {
-    generateInitialData();
-  }, []);
+    if (category === 'sorting' && (!state.inputData || state.inputData.length === 0)) {
+      const data = generateRandomArray(20);
+      state.setInputData(data);
+    } else if (category === 'pathfinding' && !state.gridData) {
+      state.setGridData(generateEmptyGrid(20, 20));
+    }
+  }, [category, state.inputData, state.gridData]);
+
+  // Re-generate steps whenever the algorithm, input data, or grid data changes
+  useEffect(() => {
+    if (state.currentAlgorithm) {
+      state.generateSteps();
+    }
+  }, [state.currentAlgorithm, state.inputData, state.gridData]);
+
 
   const canvasWidth = 600;
   const canvasHeight = 400;
@@ -76,7 +81,7 @@ function App() {
   }, [state.steps, state.currentStep, category]);
 
   const inputArray = state.inputData || [];
-  const emptyGrid = useMemo(() => generateEmptyGrid(state.gridSize.rows, state.gridSize.cols), [state.gridSize]);
+  const emptyGrid = useMemo(() => state.gridData || generateEmptyGrid(state.gridSize.rows, state.gridSize.cols), [state.gridData, state.gridSize]);
 
   return (
     <div className="app-container">

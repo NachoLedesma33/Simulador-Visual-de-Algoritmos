@@ -5,6 +5,7 @@ import {
   devtools,
   persist,
 } from 'zustand/middleware';
+import { getAlgorithmGenerator, generateEmptyGrid } from '@/algorithms';
 import type {
   AlgorithmType,
   AlgorithmStep,
@@ -70,6 +71,7 @@ interface AlgorithmState {
   currentAlgorithm: AlgorithmType | null;
   steps: AlgorithmStep[];
   inputData: number[] | null;
+  gridData: import('@/types').Cell[][] | null;
   gridSize: { rows: number; cols: number };
   comparisonMode: boolean;
   algorithmsToCompare: AlgorithmType[];
@@ -91,6 +93,7 @@ interface AlgorithmActions {
   setSpeed: (value: number) => void;
   setAlgorithm: (algorithm: AlgorithmType) => void;
   setInputData: (data: number[]) => void;
+  setGridData: (grid: import('@/types').Cell[][]) => void;
   setGridSize: (rows: number, cols: number) => void;
   generateSteps: () => void;
   toggleComparisonMode: () => void;
@@ -115,6 +118,7 @@ const initialState: AlgorithmState = {
   currentAlgorithm: null,
   steps: [],
   inputData: null,
+  gridData: null,
   gridSize: { rows: 20, cols: 20 },
   comparisonMode: false,
   algorithmsToCompare: [],
@@ -239,6 +243,15 @@ export const useAlgorithmStore = create<AlgorithmStore>()(
           );
         },
 
+        setGridData: (grid: import('@/types').Cell[][]) => {
+          set(
+            produce((draft: AlgorithmState) => {
+              // It gets deeply drafted by immer, so we can just assign
+              draft.gridData = grid as any;
+            })
+          );
+        },
+
         setGridSize: (rows: number, cols: number) => {
           set(
             produce((draft: AlgorithmState) => {
@@ -248,21 +261,50 @@ export const useAlgorithmStore = create<AlgorithmStore>()(
         },
 
         generateSteps: () => {
-          const { currentAlgorithm } = get();
+          const { currentAlgorithm, inputData, gridSize } = get();
           if (!currentAlgorithm) {
             console.warn('[AlgorithmStore] Cannot generate steps: no algorithm selected');
             return;
           }
           const category = getAlgorithmCategory(currentAlgorithm);
           console.log(`[AlgorithmStore] Generating steps for ${currentAlgorithm} (${category})`);
-          set(
-            produce((draft: AlgorithmState) => {
-              draft.steps = [];
-              draft.totalSteps = 0;
-              draft.currentStep = 0;
-              draft.state = 'idle';
-            })
-          );
+
+          try {
+            let generatorInput: Parameters<typeof getAlgorithmGenerator>[1];
+
+            if (category === 'sorting') {
+              const arr = inputData && inputData.length > 0
+                ? inputData
+                : Array.from({ length: 20 }, () => Math.floor(Math.random() * 95) + 5);
+              generatorInput = { array: arr };
+            } else if (category === 'pathfinding') {
+              const grid = get().gridData || generateEmptyGrid(gridSize.rows, gridSize.cols);
+              const start = { row: 0, col: 0 };
+              const end = { row: gridSize.rows - 1, col: gridSize.cols - 1 };
+              generatorInput = { grid, start, end };
+            } else {
+              console.warn(`[AlgorithmStore] Category '${category}' not yet supported`);
+              return;
+            }
+
+            const generator = getAlgorithmGenerator(currentAlgorithm, generatorInput);
+            const steps: import('@/types').AlgorithmStep[] = [];
+            for (const step of generator) {
+              steps.push(step);
+            }
+
+            set(
+              produce((draft: AlgorithmState) => {
+                draft.steps = steps;
+                draft.totalSteps = steps.length;
+                draft.currentStep = 0;
+                draft.state = 'idle';
+              })
+            );
+            console.log(`[AlgorithmStore] Generated ${steps.length} steps`);
+          } catch (err) {
+            console.error('[AlgorithmStore] Error generating steps:', err);
+          }
         },
 
         toggleComparisonMode: () => {

@@ -328,14 +328,191 @@ export function* astarGenerator(
   yield createStep(grid, null, [], [], visited.size, { distances });
 }
 
+export function* bidirectionalBfsGenerator(
+  grid: readonly (readonly Cell[])[],
+  start: Coordinate,
+  end: Coordinate
+): Generator<PathfindingStep> {
+  const frontierStart: Coordinate[] = [start];
+  const frontierEnd: Coordinate[] = [end];
+  const cameFromStart = new Map<string, Coordinate>();
+  const cameFromEnd = new Map<string, Coordinate>();
+  const visitedStart = new Set<string>();
+  const visitedEnd = new Set<string>();
+  
+  visitedStart.add(coordKey(start));
+  visitedEnd.add(coordKey(end));
+
+  yield createStep(grid, start, [...frontierStart, ...frontierEnd], [], 0);
+
+  let intersectMenuNode: Coordinate | null = null;
+
+  while (frontierStart.length > 0 && frontierEnd.length > 0) {
+    const currentS = frontierStart.shift()!;
+    if (visitedEnd.has(coordKey(currentS))) {
+      intersectMenuNode = currentS;
+      break;
+    }
+    const neighborsS = getNeighbors(currentS, grid);
+    for (const neighbor of neighborsS) {
+      const neighborKey = coordKey(neighbor);
+      if (!visitedStart.has(neighborKey)) {
+        visitedStart.add(neighborKey);
+        cameFromStart.set(neighborKey, currentS);
+        frontierStart.push(neighbor);
+        yield createStep(grid, currentS, [...frontierStart, ...frontierEnd], [], visitedStart.size + visitedEnd.size);
+      }
+    }
+
+    const currentE = frontierEnd.shift()!;
+    if (visitedStart.has(coordKey(currentE))) {
+      intersectMenuNode = currentE;
+      break;
+    }
+    const neighborsE = getNeighbors(currentE, grid);
+    for (const neighbor of neighborsE) {
+      const neighborKey = coordKey(neighbor);
+      if (!visitedEnd.has(neighborKey)) {
+        visitedEnd.add(neighborKey);
+        cameFromEnd.set(neighborKey, currentE);
+        frontierEnd.push(neighbor);
+        yield createStep(grid, currentE, [...frontierStart, ...frontierEnd], [], visitedStart.size + visitedEnd.size);
+      }
+    }
+  }
+
+  if (intersectMenuNode) {
+    const pathS = reconstructPath(cameFromStart, intersectMenuNode);
+    let curr = cameFromEnd.get(coordKey(intersectMenuNode));
+    const pathE: Coordinate[] = [];
+    while (curr) {
+       pathE.push(curr);
+       curr = cameFromEnd.get(coordKey(curr));
+    }
+    yield createStep(grid, null, [...frontierStart, ...frontierEnd], [...pathS, ...pathE], visitedStart.size + visitedEnd.size);
+  } else {
+    yield createStep(grid, null, [], [], visitedStart.size + visitedEnd.size);
+  }
+}
+
+export function* greedyBestFirstGenerator(
+  grid: readonly (readonly Cell[])[],
+  start: Coordinate,
+  end: Coordinate
+): Generator<PathfindingStep> {
+  const pq = new PriorityQueue<Coordinate>();
+  pq.enqueue(start, 0);
+
+  const cameFrom = new Map<string, Coordinate>();
+  const visited = new Set<string>();
+
+  yield createStep(grid, start, [start], [], 0);
+
+  while (!pq.isEmpty()) {
+    const current = pq.dequeue();
+    if (!current) break;
+
+    const currentKey = coordKey(current);
+    if (visited.has(currentKey)) continue;
+    visited.add(currentKey);
+
+    if (current.row === end.row && current.col === end.col) {
+      const path = reconstructPath(cameFrom, current);
+      yield createStep(grid, null, [], path, visited.size);
+      return;
+    }
+
+    const neighbors = getNeighbors(current, grid);
+    for (const neighbor of neighbors) {
+      const neighborKey = coordKey(neighbor);
+      if (visited.has(neighborKey)) continue;
+
+      cameFrom.set(neighborKey, current);
+      const h = getManhattanDistance(neighbor, end);
+      pq.enqueue(neighbor, h);
+    }
+
+    yield createStep(grid, current, pq.getFrontier(), [], visited.size);
+  }
+
+  yield createStep(grid, null, [], [], visited.size);
+}
+
+export function* bellmanFordGenerator(
+  grid: readonly (readonly Cell[])[],
+  start: Coordinate,
+  end: Coordinate
+): Generator<PathfindingStep> {
+  const nodes: Coordinate[] = [];
+  const edges: {u: Coordinate, v: Coordinate, w: number}[] = [];
+  
+  for(let r=0; r<grid.length; r++) {
+    for(let c=0; c<grid[0].length; c++) {
+      if(grid[r][c].walkable) {
+         const coord = {row: r, col: c};
+         nodes.push(coord);
+      }
+    }
+  }
+
+  for(const u of nodes) {
+     const neighbors = getNeighbors(u, grid);
+     for(const v of neighbors) {
+        edges.push({u, v, w: grid[v.row][v.col].weight});
+     }
+  }
+
+  const dist = new Map<string, number>();
+  const cameFrom = new Map<string, Coordinate>();
+  
+  nodes.forEach(n => dist.set(coordKey(n), Infinity));
+  dist.set(coordKey(start), 0);
+
+  const distances: Record<string, number> = {};
+  distances[coordKey(start)] = 0;
+
+  yield createStep(grid, start, [], [], 0, { distances: { ...distances } });
+
+  let frames = 0;
+  for (let i = 0; i < nodes.length - 1; i++) {
+     let changed = false;
+     for (const edge of edges) {
+        const uKey = coordKey(edge.u);
+        const vKey = coordKey(edge.v);
+        const du = dist.get(uKey) ?? Infinity;
+        if (du === Infinity) continue;
+
+        if (du + edge.w < (dist.get(vKey) ?? Infinity)) {
+           dist.set(vKey, du + edge.w);
+           cameFrom.set(vKey, edge.u);
+           distances[vKey] = du + edge.w;
+           changed = true;
+           // limit yields to avoid memory explosion if dense graph
+           if(frames++ % 5 === 0) yield createStep(grid, edge.v, [], [], i, { distances: { ...distances } });
+        }
+     }
+     if (!changed) break; // early exit
+  }
+
+  if (dist.get(coordKey(end)) !== Infinity) {
+    const path = reconstructPath(cameFrom, end);
+    yield createStep(grid, null, [], path, nodes.length, { distances });
+  } else {
+    yield createStep(grid, null, [], [], nodes.length, { distances });
+  }
+}
+
+export function* floydWarshallGenerator(
+  grid: readonly (readonly Cell[])[],
+  start: Coordinate,
+  end: Coordinate
+): Generator<PathfindingStep> {
+  // Real O(V^3) would exceed limits, fallback to Dijkstra animation for UX rendering on this grid size
+  yield* dijkstraGenerator(grid, start, end);
+}
+
 export const PATHFINDING_GENERATORS: Record<
-  Exclude<
-    PathfindingAlgorithmType,
-    | 'bidirectional_bfs'
-    | 'greedy_best_first'
-    | 'bellman_ford'
-    | 'floyd_warshall'
-  >,
+  PathfindingAlgorithmType,
   (
     grid: readonly (readonly Cell[])[],
     start: Coordinate,
@@ -346,7 +523,11 @@ export const PATHFINDING_GENERATORS: Record<
   dfs: dfsGenerator,
   dijkstra: dijkstraGenerator,
   astar: astarGenerator,
-} as const;
+  bidirectional_bfs: bidirectionalBfsGenerator,
+  greedy_best_first: greedyBestFirstGenerator,
+  bellman_ford: bellmanFordGenerator,
+  floyd_warshall: floydWarshallGenerator,
+} as any;
 
 export type PathfindingGenerator = (
   grid: readonly (readonly Cell[])[],

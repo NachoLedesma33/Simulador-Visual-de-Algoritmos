@@ -307,8 +307,175 @@ export function* heapSortGenerator(
   yield createStep(array, null, null, sorted);
 }
 
+export function* shellSortGenerator(arr: readonly number[]): Generator<SortingStep> {
+  const array = [...arr];
+  const n = array.length;
+  const sorted: number[] = [];
+  yield createStep(array, null, null, sorted);
+
+  for (let gap = Math.floor(n / 2); gap > 0; gap = Math.floor(gap / 2)) {
+    for (let i = gap; i < n; i++) {
+      const temp = array[i];
+      let j = i;
+      
+      yield createStep(array, [j - gap, i], null, sorted);
+
+      while (j >= gap && array[j - gap] > temp) {
+        array[j] = array[j - gap];
+        yield createStep(array, null, [j, j - gap], sorted);
+        j -= gap;
+        if (j >= gap) {
+           yield createStep(array, [j - gap, i], null, sorted);
+        }
+      }
+      array[j] = temp;
+      yield createStep(array, null, null, sorted);
+    }
+  }
+  for(let i=0; i<n; i++) sorted.push(i);
+  yield createStep(array, null, null, sorted);
+}
+
+export function* countingSortGenerator(arr: readonly number[]): Generator<SortingStep> {
+  const array = [...arr];
+  const n = array.length;
+  if(n === 0) return;
+  const sorted: number[] = [];
+  yield createStep(array, null, null, sorted);
+
+  const max = Math.max(...array, 0);
+  const min = Math.min(...array, 0);
+  const range = max - min + 1;
+  const count = new Array(range).fill(0);
+  const output = new Array(n).fill(0);
+
+  for (let i = 0; i < n; i++) {
+    yield createStep(array, [i, i], null, sorted);
+    count[array[i] - min]++;
+  }
+
+  for (let i = 1; i < count.length; i++) {
+    count[i] += count[i - 1];
+  }
+
+  for (let i = n - 1; i >= 0; i--) {
+    yield createStep(array, [i, i], null, sorted);
+    output[count[array[i] - min] - 1] = array[i];
+    count[array[i] - min]--;
+  }
+
+  for (let i = 0; i < n; i++) {
+    array[i] = output[i];
+    sorted.push(i);
+    yield createStep(array, null, [i, i], sorted);
+  }
+}
+
+export function* radixSortGenerator(arr: readonly number[]): Generator<SortingStep> {
+  const array = [...arr];
+  const n = array.length;
+  if (n === 0) return;
+  const sorted: number[] = [];
+  yield createStep(array, null, null, sorted);
+
+  const max = Math.max(...array);
+
+  for (let exp = 1; Math.floor(max / exp) > 0; exp *= 10) {
+    const output = new Array(n).fill(0);
+    const count = new Array(10).fill(0);
+
+    for (let i = 0; i < n; i++) {
+      yield createStep(array, [i, i], null, sorted);
+      const digit = Math.floor(array[i] / exp) % 10;
+      count[digit]++;
+    }
+
+    for (let i = 1; i < 10; i++) {
+      count[i] += count[i - 1];
+    }
+
+    for (let i = n - 1; i >= 0; i--) {
+       yield createStep(array, [i, i], null, sorted);
+      const digit = Math.floor(array[i] / exp) % 10;
+      output[count[digit] - 1] = array[i];
+      count[digit]--;
+    }
+
+    for (let i = 0; i < n; i++) {
+      array[i] = output[i];
+      yield createStep(array, null, [i, i], sorted);
+    }
+  }
+
+  for(let i=0; i<n; i++) sorted.push(i);
+  yield createStep(array, null, null, sorted);
+}
+
+export function* timSortGenerator(arr: readonly number[]): Generator<SortingStep> {
+  const array = [...arr];
+  const n = array.length;
+  const RUN = 4;
+  const sorted: number[] = [];
+  yield createStep(array, null, null, sorted);
+
+  for (let i = 0; i < n; i += RUN) {
+    const end = Math.min(i + RUN - 1, n - 1);
+    for (let j = i + 1; j <= end; j++) {
+      const temp = array[j];
+      let k = j - 1;
+      yield createStep(array, [j, k], null, sorted);
+      while (k >= i && array[k] > temp) {
+        array[k + 1] = array[k];
+        yield createStep(array, null, [k, k + 1], sorted);
+        k--;
+        if (k >= i) yield createStep(array, [j, k], null, sorted);
+      }
+      array[k + 1] = temp;
+      yield createStep(array, null, null, sorted);
+    }
+  }
+
+  for (let size = RUN; size < n; size = 2 * size) {
+    for (let left = 0; left < n; left += 2 * size) {
+      const mid = Math.min(left + size - 1, n - 1);
+      const right = Math.min(left + 2 * size - 1, n - 1);
+      if (mid < right) {
+        yield createStep(array, null, null, sorted, { merging: [left, right] } as any);
+        const leftArr = array.slice(left, mid + 1);
+        const rightArr = array.slice(mid + 1, right + 1);
+        let i = 0, j = 0, k = left;
+
+        while (i < leftArr.length && j < rightArr.length) {
+           yield createStep(array, null, null, sorted, { merging: [left, right] } as any);
+          if (leftArr[i] <= rightArr[j]) {
+            array[k] = leftArr[i];
+            i++;
+          } else {
+            array[k] = rightArr[j];
+            j++;
+          }
+          k++;
+        }
+        while (i < leftArr.length) {
+          array[k] = leftArr[i];
+          k++; i++;
+          yield createStep(array, null, null, sorted, { merging: [left, right] } as any);
+        }
+        while (j < rightArr.length) {
+          array[k] = rightArr[j];
+          k++; j++;
+          yield createStep(array, null, null, sorted, { merging: [left, right] } as any);
+        }
+      }
+    }
+  }
+
+  for(let i=0; i<n; i++) sorted.push(i);
+  yield createStep(array, null, null, sorted);
+}
+
 export const SORTING_GENERATORS: Record<
-  Exclude<SortingAlgorithmType, 'shell' | 'radix' | 'counting' | 'tim'>,
+  SortingAlgorithmType,
   (arr: readonly number[]) => Generator<SortingStep>
 > = {
   bubble: bubbleSortGenerator,
@@ -317,6 +484,10 @@ export const SORTING_GENERATORS: Record<
   insertion: insertionSortGenerator,
   selection: selectionSortGenerator,
   heap: heapSortGenerator,
-} as const;
+  shell: shellSortGenerator,
+  radix: radixSortGenerator,
+  counting: countingSortGenerator,
+  tim: timSortGenerator,
+} as any;
 
 export type SortingGenerator = (arr: readonly number[]) => Generator<SortingStep>;
