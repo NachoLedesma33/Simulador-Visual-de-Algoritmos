@@ -44,7 +44,7 @@ function App() {
     const cols = 20;
     let grid = generateEmptyGrid(rows, cols);
     if (type === 'random') {
-      grid = generateMaze(grid, 'random', 0.3) as any;
+      grid = generateMaze(grid, 'random') as any;
     }
     state.setGridData(grid);
   }, [state]);
@@ -65,10 +65,15 @@ function App() {
     }
   }, [state.currentAlgorithm, state.inputData, state.gridData]);
 
+  // Synchronize CSS theme with Zustand store state
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', state.theme);
+  }, [state.theme]);
 
-  const canvasWidth = 600;
-  const canvasHeight = 400;
-  const cellSize = 20;
+
+  const canvasWidth = 1000;
+  const canvasHeight = 600;
+  const cellSize = 35;
 
   const currentStep = useMemo(() => {
     if (category === 'sorting' && state.steps.length > 0 && state.currentStep < state.steps.length) {
@@ -182,20 +187,23 @@ function App() {
 
       <footer className="app-footer">
         <div className="footer-breadcrumb">
-          {category && algorithmInfo && (
+          {category ? (
             <>
               <span className="category-label">{category}</span>
-              <span className="separator">›</span>
-              <span className="algorithm-name">{algorithmInfo.name}</span>
+              <span className="separator">/</span>
             </>
-          )}
-        </div>
-        <div className="footer-stats">
+          ) : null}
+          <span className="algorithm-name">
+            {algorithmInfo?.name || 'Selecciona un algoritmo'}
+          </span>
           {algorithmInfo && (
             <span className="complexity-badge">
               {algorithmInfo.complexity.time}
             </span>
           )}
+        </div>
+        <div className="footer-copyright">
+          <span>&copy; {new Date().getFullYear()} Nacho Ledesma | App de Simulador de Algoritmos. Todos los derechos reservados.</span>
         </div>
       </footer>
 
@@ -214,7 +222,9 @@ function App() {
           align-items: center;
           padding: 12px 24px;
           border-bottom: 1px solid var(--border);
-          background: var(--bg);
+          background: var(--bg-panel);
+          box-shadow: var(--shadow);
+          z-index: 10;
         }
 
         .app-title {
@@ -234,7 +244,7 @@ function App() {
           height: 36px;
           border: 1px solid var(--border);
           border-radius: 8px;
-          background: var(--bg);
+          background: var(--bg-panel);
           cursor: pointer;
           font-size: 18px;
           display: flex;
@@ -254,7 +264,9 @@ function App() {
           border-right: 1px solid var(--border);
           padding: 16px;
           overflow-y: auto;
-          background: var(--bg);
+          background: var(--bg-panel);
+          box-shadow: var(--shadow);
+          z-index: 5;
         }
 
         .app-sidebar.closed {
@@ -310,14 +322,36 @@ function App() {
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 24px;
+          padding: 32px;
           background: var(--bg);
+          overflow: hidden;
         }
 
         .canvas-container {
           display: flex;
           align-items: center;
           justify-content: center;
+          width: 100%;
+          height: 100%;
+          max-width: 1600px;
+          background: var(--bg-panel);
+          border: 1px solid var(--border);
+          border-radius: 16px;
+          box-shadow: var(--shadow);
+          padding: 32px;
+          box-sizing: border-box;
+        }
+        
+        /* Use dynamic containment to avoid aspect ratio stretching but preserve scale & center */
+        .canvas-container canvas {
+          max-width: 100% !important;
+          max-height: 100% !important;
+          width: auto !important;
+          height: auto !important;
+          object-fit: contain;
+          margin: auto;
+          display: block;
+          border-radius: 8px;
         }
 
         .empty-state {
@@ -331,8 +365,9 @@ function App() {
           align-items: center;
           padding: 8px 24px;
           border-top: 1px solid var(--border);
-          background: var(--bg);
+          background: var(--bg-panel);
           font-size: 13px;
+          z-index: 10;
         }
 
         .footer-breadcrumb {
@@ -357,12 +392,14 @@ function App() {
           font-weight: 500;
         }
 
-        .footer-stats {
-          display: flex;
-          gap: 12px;
+        .footer-copyright {
+          font-size: 11px;
+          color: var(--text);
+          letter-spacing: 0.3px;
         }
 
         .complexity-badge {
+          margin-left: 12px;
           padding: 4px 8px;
           background: var(--code-bg);
           border-radius: 4px;
@@ -383,7 +420,7 @@ function App() {
         .btn-sm {
           padding: 6px 12px;
           font-size: 13px;
-          background: var(--bg);
+          background: var(--bg-panel);
           border: 1px solid var(--border);
           color: var(--text);
         }

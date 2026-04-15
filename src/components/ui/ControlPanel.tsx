@@ -297,14 +297,20 @@ export function ControlPanel({
           padding: 8px 12px;
           border: 1px solid var(--border);
           border-radius: 6px;
-          background: var(--bg);
-          color: var(--text);
+          background: var(--bg-panel);
+          color: var(--text-h);
           font-size: 14px;
           cursor: pointer;
+          transition: border-color 0.2s;
+        }
+        
+        .algorithm-select:hover {
+          border-color: var(--primary);
         }
 
         .playback-controls {
           display: flex;
+          flex-direction: row;
           gap: 8px;
           justify-content: center;
         }
@@ -338,10 +344,16 @@ export function ControlPanel({
           background: var(--primary);
           color: white;
         }
+        .btn-primary:hover:not(:disabled) {
+          background: var(--primary-hover);
+        }
 
         .btn-danger {
-          background: #ef4444;
+          background: var(--danger);
           color: white;
+        }
+        .btn-danger:hover:not(:disabled) {
+          background: var(--danger-hover);
         }
 
         .btn-text {
@@ -353,8 +365,14 @@ export function ControlPanel({
         .btn-sm {
           padding: 6px 12px;
           font-size: 12px;
+          background: var(--bg-panel);
+          border: 1px solid var(--border);
+          color: var(--text-h);
+        }
+        
+        .btn-sm:hover {
           background: var(--code-bg);
-          color: var(--text);
+          color: var(--text-h);
         }
 
         .speed-control {
