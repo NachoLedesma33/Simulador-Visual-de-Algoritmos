@@ -44,6 +44,21 @@ export type AlgorithmType =
   | TreeAlgorithmType
   | GraphAlgorithmType;
 
+export interface AlgorithmInfo {
+  id: AlgorithmType;
+  name: string;
+  category: AlgorithmCategory;
+  complexity: {
+    time: string;
+    space: string;
+  };
+  description: string;
+  bestCase?: string;
+  worstCase?: string;
+  stable?: boolean;
+  inPlace?: boolean;
+}
+
 export type VisualizationState = 'idle' | 'running' | 'paused' | 'completed';
 
 export type AlgorithmCategory = 'sorting' | 'pathfinding' | 'tree' | 'graph';
@@ -71,6 +86,8 @@ export interface PathfindingStep {
   frontierA?: readonly Coordinate[];
   /** Frontier for bidirectional BFS from goal */
   frontierB?: readonly Coordinate[];
+  /** Accumulated distances for Dijkstra/A* */
+  distances?: Record<string, number>;
 }
 
 export interface TreeNode {
