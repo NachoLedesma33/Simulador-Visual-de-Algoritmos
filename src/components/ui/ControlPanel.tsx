@@ -236,6 +236,12 @@ export function ControlPanel({
           />
           <div className="slider-track">
             <div className="slider-fill" style={{ width: `${state.speed}%` }}/>
+            <div className="slider-thumb" style={{ left: `${state.speed}%` }}/>
+          </div>
+          <div className="slider-ticks">
+            <span>1</span>
+            <span>50</span>
+            <span>100</span>
           </div>
         </div>
       </div>
@@ -557,32 +563,72 @@ export function ControlPanel({
 
         .slider-wrapper {
           position: relative;
-          height: 6px;
+          height: 32px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          gap: 8px;
         }
 
         .speed-slider {
           position: absolute;
           width: 100%;
-          height: 6px;
+          height: 100%;
           opacity: 0;
           cursor: pointer;
-          z-index: 2;
+          z-index: 10;
+          margin: 0;
         }
 
         .slider-track {
-          position: absolute;
-          width: 100%;
-          height: 6px;
-          background: var(--code-bg);
-          border-radius: 3px;
-          overflow: hidden;
+          position: relative;
+          height: 8px;
+          background: var(--bg-panel);
+          border: 1px solid var(--border);
+          border-radius: 4px;
+          overflow: visible;
         }
 
         .slider-fill {
+          position: absolute;
+          left: 0;
+          top: 0;
           height: 100%;
-          background: linear-gradient(90deg, var(--primary), var(--primary-hover));
-          border-radius: 3px;
-          transition: width 0.1s;
+          background: linear-gradient(90deg, var(--primary), var(--accent));
+          border-radius: 3px 0 0 3px;
+          transition: width 0.05s;
+        }
+
+        .slider-thumb {
+          position: absolute;
+          top: 50%;
+          width: 20px;
+          height: 20px;
+          background: white;
+          border: 3px solid var(--primary);
+          border-radius: 50%;
+          transform: translate(-50%, -50%);
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+          transition: left 0.05s, transform 0.1s;
+          z-index: 5;
+        }
+
+        .slider-thumb:hover {
+          transform: translate(-50%, -50%) scale(1.15);
+        }
+
+        .slider-thumb::after {
+          content: '';
+          position: absolute;
+          inset: -8px;
+        }
+
+        .slider-ticks {
+          display: flex;
+          justify-content: space-between;
+          font-size: 10px;
+          color: var(--text);
+          font-family: var(--mono);
         }
 
         .status-section {
