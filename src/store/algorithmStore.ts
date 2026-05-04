@@ -51,7 +51,11 @@ const ALGORITHM_CATEGORIES: Record<AlgorithmType, AlgorithmCategory> = {
 };
 
 function speedToDelay(speed: number): number {
-  return Math.max(10, 1000 - (speed - 1) * 10);
+  const normalizedSpeed = Math.max(1, Math.min(100, speed));
+  const minDelay = 10;
+  const maxDelay = 1000;
+  const progress = normalizedSpeed / 100;
+  return Math.round(maxDelay - (maxDelay - minDelay) * Math.pow(progress, 1.5));
 }
 
 function getAlgorithmCategory(type: AlgorithmType): AlgorithmCategory {
