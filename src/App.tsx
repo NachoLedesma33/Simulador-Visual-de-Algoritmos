@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAlgorithmStore } from '@/store';
 import { getAlgorithmInfo, generateRandomArray, generateNearlySortedArray, generateReversedArray, generateEmptyGrid, generateMaze } from '@/algorithms';
 import { SortingCanvas, PathfindingCanvas } from '@/components/visualizers';
-import { ControlPanel } from '@/components/ui';
+import { ControlPanel, TheoryModal } from '@/components/ui';
 import type { SortingStep, PathfindingStep, AlgorithmCategory } from '@/types';
 import './App.css';
 
@@ -19,6 +19,9 @@ function App() {
   const algorithmInfo = state.currentAlgorithm ? getAlgorithmInfo(state.currentAlgorithm) : null;
 
   const [showSidebar] = useState(true);
+  const [showTheory, setShowTheory] = useState(false);
+
+  const selectedAlgorithm = state.currentAlgorithm;
 
   const handleDataGenerate = useCallback((type: 'random' | 'nearly' | 'reversed') => {
     const size = 20;
@@ -95,6 +98,15 @@ function App() {
           <h1 className="app-title">Visualizador de Algoritmos</h1>
         </div>
         <div className="header-right">
+          {selectedAlgorithm && (
+            <button
+              className="info-toggle"
+              onClick={() => setShowTheory(true)}
+              title="Información teórica"
+            >
+              ℹ️
+            </button>
+          )}
           <button
             className="theme-toggle"
             onClick={() => state.toggleTheme?.()}
@@ -207,6 +219,13 @@ function App() {
         </div>
       </footer>
 
+      {showTheory && (
+        <TheoryModal
+          algorithmType={state.currentAlgorithm}
+          onClose={() => setShowTheory(false)}
+        />
+      )}
+
       <style>{`
         .app-container {
           display: flex;
@@ -220,36 +239,62 @@ function App() {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 12px 24px;
+          padding: 14px 24px;
           border-bottom: 1px solid var(--border);
           background: var(--bg-panel);
-          box-shadow: var(--shadow);
           z-index: 10;
         }
 
         .app-title {
-          font-size: 20px;
-          font-weight: 600;
+          font-size: 18px;
+          font-weight: 700;
           margin: 0;
           color: var(--text-h);
+          font-family: var(--heading);
+          letter-spacing: -0.02em;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .app-title::before {
+          content: '';
+          width: 28px;
+          height: 28px;
+          background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
         .header-right {
           display: flex;
-          gap: 12px;
+          gap: 10px;
         }
 
-        .theme-toggle {
-          width: 36px;
-          height: 36px;
+        .theme-toggle,
+        .info-toggle {
+          width: 40px;
+          height: 40px;
           border: 1px solid var(--border);
-          border-radius: 8px;
+          border-radius: 12px;
           background: var(--bg-panel);
           cursor: pointer;
-          font-size: 18px;
+          font-size: 16px;
           display: flex;
           align-items: center;
           justify-content: center;
+          transition: all 0.2s;
+        }
+
+        .theme-toggle:hover {
+          background: var(--code-bg);
+        }
+
+        .info-toggle:hover {
+          background: var(--primary-surface);
+          border-color: var(--primary);
         }
 
         .app-main {
@@ -259,13 +304,12 @@ function App() {
         }
 
         .app-sidebar {
-          width: 320px;
-          min-width: 320px;
+          width: 340px;
+          min-width: 340px;
           border-right: 1px solid var(--border);
-          padding: 16px;
+          padding: 20px;
           overflow-y: auto;
-          background: var(--bg-panel);
-          box-shadow: var(--shadow);
+          background: var(--bg);
           z-index: 5;
         }
 
@@ -277,17 +321,20 @@ function App() {
         }
 
         .sidebar-panel {
-          margin-top: 24px;
-          padding: 16px;
+          margin-top: 20px;
+          padding: 14px;
           background: var(--code-bg);
-          border-radius: 8px;
+          border: 1px solid var(--border);
+          border-radius: 10px;
         }
 
         .panel-title {
-          font-size: 14px;
-          font-weight: 500;
+          font-size: 11px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
           margin: 0 0 12px;
-          color: var(--text-h);
+          color: var(--text);
         }
 
         .stats-grid {
@@ -322,9 +369,21 @@ function App() {
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 32px;
-          background: var(--bg);
+          padding: 24px;
+          background: linear-gradient(135deg, var(--bg) 0%, var(--code-bg) 100%);
           overflow: hidden;
+          position: relative;
+        }
+
+        .canvas-area::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: 
+            radial-gradient(circle at 20% 30%, var(--primary-surface) 0%, transparent 50%),
+            radial-gradient(circle at 80% 70%, var(--accent-surface) 0%, transparent 50%);
+          opacity: 0.5;
+          pointer-events: none;
         }
 
         .canvas-container {
@@ -336,13 +395,14 @@ function App() {
           max-width: 1600px;
           background: var(--bg-panel);
           border: 1px solid var(--border);
-          border-radius: 16px;
-          box-shadow: var(--shadow);
-          padding: 32px;
+          border-radius: 20px;
+          padding: 24px;
           box-sizing: border-box;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+          position: relative;
+          z-index: 1;
         }
         
-        /* Use dynamic containment to avoid aspect ratio stretching but preserve scale & center */
         .canvas-container canvas {
           max-width: 100% !important;
           max-height: 100% !important;
@@ -351,61 +411,72 @@ function App() {
           object-fit: contain;
           margin: auto;
           display: block;
-          border-radius: 8px;
+          border-radius: 12px;
         }
 
         .empty-state {
           text-align: center;
           color: var(--text);
+          font-size: 14px;
+          padding: 40px;
+          background: var(--bg-panel);
+          border: 2px dashed var(--border);
+          border-radius: 16px;
         }
 
         .app-footer {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 8px 24px;
+          padding: 14px 28px;
           border-top: 1px solid var(--border);
           background: var(--bg-panel);
-          font-size: 13px;
-          z-index: 10;
+          font-size: 12px;
         }
 
         .footer-breadcrumb {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 12px;
         }
 
         .category-label {
           color: var(--text);
           text-transform: uppercase;
-          font-size: 11px;
-          letter-spacing: 0.5px;
+          font-size: 10px;
+          font-weight: 600;
+          letter-spacing: 0.1em;
+          background: var(--code-bg);
+          padding: 4px 8px;
+          border-radius: 4px;
         }
 
         .separator {
-          color: var(--text);
+          color: var(--border);
         }
 
         .algorithm-name {
           color: var(--text-h);
-          font-weight: 500;
+          font-weight: 600;
         }
 
         .footer-copyright {
           font-size: 11px;
           color: var(--text);
           letter-spacing: 0.3px;
+          opacity: 0.7;
         }
 
         .complexity-badge {
           margin-left: 12px;
-          padding: 4px 8px;
-          background: var(--code-bg);
-          border-radius: 4px;
+          padding: 4px 10px;
+          background: var(--primary-surface);
+          border: 1px solid var(--primary);
+          border-radius: 6px;
           font-family: var(--mono);
           font-size: 12px;
-          color: var(--text-h);
+          font-weight: 600;
+          color: var(--primary);
         }
 
         .btn {
