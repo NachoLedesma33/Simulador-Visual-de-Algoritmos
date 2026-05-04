@@ -40,13 +40,48 @@ export function ControlPanel({
     []
   );
 
+  const [isDragging, setIsDragging] = useState(false);
+
   const handleSpeedChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = parseInt(e.target.value, 10);
-      state.setSpeed(value);
+      state.setSpeed(parseInt(e.target.value, 10));
     },
     []
   );
+
+  const handleSpeedDragStart = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    setIsDragging(true);
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const percentage = Math.max(1, Math.min(100, Math.round((x / rect.width) * 100)));
+    state.setSpeed(percentage);
+  }, []);
+
+  const handleSpeedDragMove = useCallback((e: MouseEvent) => {
+    if (!isDragging) return;
+    const sliderEl = document.querySelector('.slider-wrapper') as HTMLDivElement;
+    if (sliderEl) {
+      const rect = sliderEl.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const percentage = Math.max(1, Math.min(100, Math.round((x / rect.width) * 100)));
+      state.setSpeed(percentage);
+    }
+  }, [isDragging]);
+
+  const handleSpeedDragEnd = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleSpeedDragMove);
+      window.addEventListener('mouseup', handleSpeedDragEnd);
+      return () => {
+        window.removeEventListener('mousemove', handleSpeedDragMove);
+        window.removeEventListener('mouseup', handleSpeedDragEnd);
+      };
+    }
+  }, [isDragging, handleSpeedDragMove, handleSpeedDragEnd]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -225,7 +260,10 @@ export function ControlPanel({
           </label>
           <span className="speed-value">{state.speed}%</span>
         </div>
-        <div className="slider-wrapper">
+        <div 
+          className={`slider-wrapper ${isDragging ? 'dragging' : ''}`}
+          onMouseDown={handleSpeedDragStart}
+        >
           <input
             type="range"
             className="speed-slider"
@@ -568,6 +606,16 @@ export function ControlPanel({
           flex-direction: column;
           justify-content: center;
           gap: 8px;
+          cursor: pointer;
+          user-select: none;
+        }
+
+        .slider-wrapper.dragging {
+          cursor: grabbing;
+        }
+
+        .slider-wrapper:hover .slider-thumb {
+          transform: translate(-50%, -50%) scale(1.15);
         }
 
         .speed-slider {
