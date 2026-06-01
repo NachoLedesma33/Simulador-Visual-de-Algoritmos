@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useAlgorithmStore } from '@/store';
+import { useAlgorithmStore, useUIStore } from '@/store';
 import { getAlgorithmInfo, generateRandomArray, generateNearlySortedArray, generateReversedArray, generateEmptyGrid, generateMaze } from '@/algorithms';
 import { SortingCanvas, PathfindingCanvas } from '@/components/visualizers';
-import { ControlPanel, TheoryModal } from '@/components/ui';
+import { ControlPanel, CodePanel, StatsPanel, TutorialModal, TheoryModal } from '@/components/ui';
+import { useKeyboardShortcuts } from '@/hooks';
 import type { SortingStep, PathfindingStep, AlgorithmCategory } from '@/types';
 import './App.css';
 
 function App() {
   const state = useAlgorithmStore();
+  const ui = useUIStore();
+  const toasts = useUIStore((state) => state.toasts);
 
   const category = useMemo((): AlgorithmCategory | null => {
     if (!state.currentAlgorithm) return null;
@@ -18,10 +21,25 @@ function App() {
 
   const algorithmInfo = state.currentAlgorithm ? getAlgorithmInfo(state.currentAlgorithm) : null;
 
-  const [showSidebar] = useState(true);
   const [showTheory, setShowTheory] = useState(false);
+  const [showCode, setShowCode] = useState(true);
+  const [showStatsPanel, setShowStatsPanel] = useState(true);
 
   const selectedAlgorithm = state.currentAlgorithm;
+
+  const keyboardActions = useMemo(() => ({
+    onPlay: () => state.play(),
+    onPause: () => state.pause(),
+    onNextStep: () => state.nextStep(),
+    onPreviousStep: () => state.previousStep(),
+    onReset: () => state.reset(),
+    onSetSpeed: (speed: number) => state.setSpeed(speed),
+    onToggleComparison: () => state.toggleComparisonMode?.(),
+    onToggleTheme: () => state.toggleTheme?.(),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), []);
+
+  const { showHelp, setShowHelp, lastAction, shortcutsList } = useKeyboardShortcuts(keyboardActions);
 
   const handleDataGenerate = useCallback((type: 'random' | 'nearly' | 'reversed') => {
     const size = 20;
@@ -40,6 +58,7 @@ function App() {
         data = generateRandomArray(size);
     }
     state.setInputData(data);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleGridGenerate = useCallback((type: 'clear' | 'random') => {
@@ -50,7 +69,8 @@ function App() {
       grid = generateMaze(grid, 'random') as any;
     }
     state.setGridData(grid);
-  }, [state]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (category === 'sorting' && (!state.inputData || state.inputData.length === 0)) {
@@ -59,20 +79,25 @@ function App() {
     } else if (category === 'pathfinding' && !state.gridData) {
       state.setGridData(generateEmptyGrid(20, 20));
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category, state.inputData, state.gridData]);
 
-  // Re-generate steps whenever the algorithm, input data, or grid data changes
   useEffect(() => {
     if (state.currentAlgorithm) {
       state.generateSteps();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.currentAlgorithm, state.inputData, state.gridData]);
 
-  // Synchronize CSS theme with Zustand store state
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', state.theme);
   }, [state.theme]);
 
+  useEffect(() => {
+    if (ui.darkMode) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  }, [ui.darkMode]);
 
   const canvasWidth = 1000;
   const canvasHeight = 600;
@@ -98,67 +123,101 @@ function App() {
           <h1 className="app-title">Visualizador de Algoritmos</h1>
         </div>
         <div className="header-right">
+          <button
+            className="icon-btn"
+            onClick={() => setShowHelp(!showHelp)}
+            title="Atajos (H)"
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M7 7c0-1 1-2 2-2s2 1 2 2c0 1.5-2 2-2 3.5V12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <circle cx="9" cy="14" r="0.5" fill="currentColor"/>
+            </svg>
+          </button>
           {selectedAlgorithm && (
             <button
-              className="info-toggle"
+              className="icon-btn"
               onClick={() => setShowTheory(true)}
               title="Información teórica"
             >
-              ℹ️
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.5"/>
+                <path d="M9 12V8M9 6h0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
             </button>
           )}
           <button
-            className="theme-toggle"
+            className="icon-btn"
             onClick={() => state.toggleTheme?.()}
             title="Cambiar tema"
           >
-            {state.theme === 'dark' ? '☀️' : '🌙'}
+            {state.theme === 'dark' ? (
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <circle cx="9" cy="9" r="4.5" stroke="currentColor" strokeWidth="1.5"/>
+                <path d="M9 1v2M9 15v2M1 9h2M15 9h2M3.3 3.3l1.4 1.4M13.3 13.3l1.4 1.4M3.3 14.7l1.4-1.4M13.3 4.7l1.4-1.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <path d="M14.5 11.5A8 8 0 016.5 3.5a7 7 0 108 8z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            )}
           </button>
         </div>
       </header>
 
       <main className="app-main">
-        <aside className={`app-sidebar ${showSidebar ? 'open' : 'closed'}`}>
+        <aside className={`app-sidebar ${ui.showSidebar ? 'open' : 'closed'}`}>
           <ControlPanel
             onDataGenerate={handleDataGenerate}
             onGridGenerate={handleGridGenerate}
           />
 
-          {category === 'sorting' && (
-            <div className="sidebar-panel">
-              <h3 className="panel-title">Estadísticas</h3>
-              <div className="stats-grid">
-                <div className="stat-item">
-                  <span className="stat-label">Comparaciones</span>
-                  <span className="stat-value">{state.currentStep}</span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-label">Pasos Totales</span>
-                  <span className="stat-value">{state.totalSteps}</span>
-                </div>
-              </div>
+          {selectedAlgorithm && (
+            <div className="sidebar-section">
+              <button
+                className="section-toggle"
+                onClick={() => setShowCode(!showCode)}
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M4 4L1 7L4 10M10 4L13 7L10 10M9 2L5 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span>Pseudocódigo</span>
+                <svg className={`toggle-chevron ${showCode ? 'open' : ''}`} width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M4 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              </button>
+              {showCode && (
+                <CodePanel
+                  algorithmId={selectedAlgorithm}
+                />
+              )}
             </div>
           )}
 
-          {category === 'pathfinding' && (
-            <div className="sidebar-panel">
-              <h3 className="panel-title">Grid</h3>
-              <div className="grid-controls">
-                <button
-                  className="btn btn-sm"
-                  onClick={() => handleGridGenerate('clear')}
-                >
-                  Limpiar
-                </button>
-                <button
-                  className="btn btn-sm"
-                  onClick={() => handleGridGenerate('random')}
-                >
-                  Muros Aleatorios
-                </button>
-              </div>
+          {selectedAlgorithm && (
+            <div className="sidebar-section">
+              <button
+                className="section-toggle"
+                onClick={() => setShowStatsPanel(!showStatsPanel)}
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M2 12V6h3v6M6 12V3h3v9M10 12V8h3v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+                <span>Rendimiento</span>
+                <svg className={`toggle-chevron ${showStatsPanel ? 'open' : ''}`} width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M4 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              </button>
+              {showStatsPanel && (
+                <StatsPanel
+                  algorithmId={selectedAlgorithm}
+                  currentStep={state.currentStep}
+                  totalSteps={state.totalSteps}
+                />
+              )}
             </div>
           )}
+
         </aside>
 
         <section className="canvas-area">
@@ -219,11 +278,43 @@ function App() {
         </div>
       </footer>
 
+      <TutorialModal />
+
       {showTheory && (
         <TheoryModal
           algorithmType={state.currentAlgorithm}
           onClose={() => setShowTheory(false)}
         />
+      )}
+
+      {showHelp && (
+        <div className="help-overlay" onClick={() => setShowHelp(false)}>
+          <div className="help-modal" onClick={(e) => e.stopPropagation()}>
+            <h2 className="help-title">Atajos de Teclado</h2>
+            <div className="help-list">
+              {shortcutsList.map((s) => (
+                <div key={s.key} className="help-row">
+                  <kbd className="help-key">{s.key}</kbd>
+                  <span className="help-action">{s.action}</span>
+                </div>
+              ))}
+            </div>
+            <button className="help-close" onClick={() => setShowHelp(false)}>Cerrar</button>
+          </div>
+        </div>
+      )}
+
+      <div className="toast-container">
+        {toasts.map((toast) => (
+          <div key={toast.id} className={`toast toast-${toast.type}`}>
+            <span className="toast-msg">{toast.message}</span>
+            <button className="toast-close" onClick={() => ui.removeToast(toast.id)}>✕</button>
+          </div>
+        ))}
+      </div>
+
+      {lastAction && (
+        <div className="action-feedback">{lastAction}</div>
       )}
 
       <style>{`
@@ -318,6 +409,40 @@ function App() {
           min-width: 0;
           padding: 0;
           overflow: hidden;
+        }
+
+        .sidebar-section {
+          margin-top: 20px;
+        }
+
+        .section-toggle {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 12px;
+          background: var(--bg-panel);
+          border: 1px solid var(--border);
+          border-radius: 10px;
+          cursor: pointer;
+          font-size: 13px;
+          font-weight: 500;
+          color: var(--text-h);
+          transition: all 0.2s;
+        }
+
+        .section-toggle:hover {
+          background: var(--code-bg);
+        }
+
+        .toggle-chevron {
+          margin-left: auto;
+          transition: transform 0.2s;
+          color: var(--text);
+        }
+
+        .toggle-chevron.open {
+          transform: rotate(180deg);
         }
 
         .sidebar-panel {
@@ -498,6 +623,163 @@ function App() {
 
         .btn-sm:hover {
           background: var(--code-bg);
+        }
+
+        .icon-btn {
+          width: 40px;
+          height: 40px;
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          background: var(--bg-panel);
+          cursor: pointer;
+          color: var(--text);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s;
+        }
+        .icon-btn:hover {
+          background: var(--code-bg);
+          color: var(--text-h);
+        }
+
+        .help-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.5);
+          z-index: 1000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .help-modal {
+          background: var(--bg-panel);
+          border: 1px solid var(--border);
+          border-radius: 16px;
+          padding: 28px 32px;
+          max-width: 420px;
+          width: 100%;
+          max-height: 80vh;
+          overflow-y: auto;
+          box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+        }
+        .help-title {
+          font-family: var(--heading);
+          font-size: 18px;
+          margin: 0 0 20px;
+          color: var(--text-h);
+        }
+        .help-list {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          margin-bottom: 20px;
+        }
+        .help-row {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          padding: 6px 0;
+        }
+        .help-key {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 32px;
+          height: 28px;
+          padding: 0 8px;
+          background: var(--code-bg);
+          border: 1px solid var(--border);
+          border-radius: 6px;
+          font-family: var(--mono);
+          font-size: 12px;
+          color: var(--text-h);
+        }
+        .help-action {
+          font-size: 13px;
+          color: var(--text);
+        }
+        .help-close {
+          width: 100%;
+          padding: 10px;
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          background: var(--bg);
+          color: var(--text);
+          font-family: inherit;
+          font-size: 13px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .help-close:hover {
+          background: var(--code-bg);
+        }
+
+        .toast-container {
+          position: fixed;
+          bottom: 24px;
+          right: 24px;
+          z-index: 999;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          max-width: 340px;
+        }
+        .toast {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 12px 16px;
+          border-radius: 10px;
+          background: var(--bg-panel);
+          border: 1px solid var(--border);
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+          font-size: 13px;
+          animation: toast-in 0.3s ease-out;
+        }
+        .toast-info { border-left: 3px solid #3b82f6; }
+        .toast-success { border-left: 3px solid #22c55e; }
+        .toast-warning { border-left: 3px solid #eab308; }
+        .toast-error { border-left: 3px solid #ef4444; }
+        .toast-msg { flex: 1; color: var(--text); }
+        .toast-close {
+          border: none;
+          background: none;
+          cursor: pointer;
+          color: var(--text);
+          opacity: 0.5;
+          font-size: 14px;
+          padding: 2px 4px;
+          transition: opacity 0.2s;
+        }
+        .toast-close:hover { opacity: 1; }
+
+        @keyframes toast-in {
+          from { opacity: 0; transform: translateX(20px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+
+        .action-feedback {
+          position: fixed;
+          top: 80px;
+          left: 50%;
+          transform: translateX(-50%);
+          padding: 8px 20px;
+          background: var(--bg-panel);
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          font-size: 13px;
+          color: var(--text-h);
+          z-index: 500;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          animation: feedback-in 0.2s ease-out;
+          pointer-events: none;
+        }
+
+        @keyframes feedback-in {
+          from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+          to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
       `}</style>
     </div>

@@ -111,6 +111,14 @@ export const useUIStore = create<UIStore>()(
             }
             return { toasts: updated };
           });
+
+          if (finalDuration > 0) {
+            setTimeout(() => {
+              set((s) => ({
+                toasts: s.toasts.filter((t) => t.id !== newToast.id),
+              }));
+            }, finalDuration);
+          }
         },
 
         removeToast: (id) =>
