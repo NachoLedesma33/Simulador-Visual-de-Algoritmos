@@ -128,6 +128,15 @@ export function useCanvas(
 
     resizeCanvas();
 
+    const handleWindowResize = () => {
+      resizeCanvas();
+      if (!isPaused) {
+        redraw();
+      }
+    };
+
+    window.addEventListener('resize', handleWindowResize);
+
     observerRef.current = new ResizeObserver(() => {
       resizeCanvas();
       if (!isPaused) {
@@ -143,6 +152,7 @@ export function useCanvas(
 
     return () => {
       pause();
+      window.removeEventListener('resize', handleWindowResize);
       observerRef.current?.disconnect();
     };
   }, [start, pause, resizeCanvas, isPaused, redraw]);

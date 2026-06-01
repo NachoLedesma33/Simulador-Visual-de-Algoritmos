@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAlgorithmStore, useUIStore } from '@/store';
 import { getAlgorithmInfo, generateRandomArray, generateNearlySortedArray, generateReversedArray, generateEmptyGrid, generateMaze } from '@/algorithms';
 import { SortingCanvas, PathfindingCanvas } from '@/components/visualizers';
@@ -24,6 +24,7 @@ function App() {
   const [showTheory, setShowTheory] = useState(false);
   const [showCode, setShowCode] = useState(true);
   const [showStatsPanel, setShowStatsPanel] = useState(true);
+  const [generating, setGenerating] = useState(false);
 
   const selectedAlgorithm = state.currentAlgorithm;
 
@@ -84,10 +85,17 @@ function App() {
 
   useEffect(() => {
     if (state.currentAlgorithm) {
+      setGenerating(true);
       state.generateSteps();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.currentAlgorithm, state.inputData, state.gridData]);
+
+  useEffect(() => {
+    if (generating && state.totalSteps > 0) {
+      setGenerating(false);
+    }
+  }, [generating, state.totalSteps]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', state.theme);
@@ -99,8 +107,31 @@ function App() {
     }
   }, [ui.darkMode]);
 
-  const canvasWidth = 1000;
-  const canvasHeight = 600;
+  const prevAlgorithm = useRef<string | null>(null);
+  useEffect(() => {
+    if (state.currentAlgorithm && state.currentAlgorithm !== prevAlgorithm.current) {
+      prevAlgorithm.current = state.currentAlgorithm;
+      const name = algorithmInfo?.name || state.currentAlgorithm;
+      ui.addToast(`Algoritmo "${name}" seleccionado`, 'info', 2000);
+    }
+  }, [state.currentAlgorithm, algorithmInfo?.name]);
+
+  const prevTotalSteps = useRef(0);
+  useEffect(() => {
+    if (state.totalSteps > 0 && state.totalSteps !== prevTotalSteps.current) {
+      prevTotalSteps.current = state.totalSteps;
+      ui.addToast(`${state.totalSteps} pasos generados`, 'success', 2000);
+    }
+  }, [state.totalSteps]);
+
+  const prevState = useRef(state.state);
+  useEffect(() => {
+    if (prevState.current === 'running' && state.state === 'idle' && state.currentStep >= state.totalSteps - 1) {
+      ui.addToast('Ejecución completada', 'success', 3000);
+    }
+    prevState.current = state.state;
+  }, [state.state, state.currentStep, state.totalSteps]);
+
   const cellSize = 35;
 
   const currentStep = useMemo(() => {
@@ -117,7 +148,7 @@ function App() {
   const emptyGrid = useMemo(() => state.gridData || generateEmptyGrid(state.gridSize.rows, state.gridSize.cols), [state.gridData, state.gridSize]);
 
   return (
-    <div className="app-container">
+    <div className={`app-container ${ui.selectedView === 'fullscreen' ? 'fullscreen' : ''}`}>
       <header className="app-header">
         <div className="header-left">
           <h1 className="app-title">Visualizador de Algoritmos</h1>
@@ -148,6 +179,19 @@ function App() {
           )}
           <button
             className="icon-btn"
+            onClick={() => ui.setSelectedView(ui.selectedView === 'fullscreen' ? 'single' : 'fullscreen')}
+            title={ui.selectedView === 'fullscreen' ? 'Salir de pantalla completa' : 'Pantalla completa'}
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              {ui.selectedView === 'fullscreen' ? (
+                <path d="M4 14L2 16M4 2L2 4M14 4L16 2M14 14L16 16M2 8h2M14 8h2M8 2v2M8 14v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              ) : (
+                <path d="M2 6V2h4M2 12v4h4M16 6V2h-4M16 12v4h-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              )}
+            </svg>
+          </button>
+          <button
+            className="icon-btn"
             onClick={() => state.toggleTheme?.()}
             title="Cambiar tema"
           >
@@ -166,7 +210,7 @@ function App() {
       </header>
 
       <main className="app-main">
-        <aside className={`app-sidebar ${ui.showSidebar ? 'open' : 'closed'}`}>
+        <aside className={`app-sidebar ${ui.showSidebar && ui.selectedView !== 'fullscreen' ? 'open' : 'closed'}`}>
           <ControlPanel
             onDataGenerate={handleDataGenerate}
             onGridGenerate={handleGridGenerate}
@@ -220,14 +264,29 @@ function App() {
 
         </aside>
 
+        <button
+          className="sidebar-handle"
+          onClick={() => ui.toggleSidebar()}
+          title={ui.showSidebar ? 'Ocultar panel' : 'Mostrar panel'}
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d={ui.showSidebar ? 'M10 4l-4 4 4 4' : 'M6 4l4 4-4 4'} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+
         <section className="canvas-area">
           <div className="canvas-container">
-            {category === 'sorting' && inputArray.length > 0 && (
+            {generating && (
+              <div className="skeleton-overlay">
+                <div className="skeleton-spinner" />
+                <p className="skeleton-text">Generando pasos...</p>
+              </div>
+            )}
+
+            {!generating && category === 'sorting' && inputArray.length > 0 && (
               <SortingCanvas
                 data={inputArray}
                 step={currentStep as SortingStep || { array: [], comparing: null, swapping: null, sorted: [] }}
-                width={canvasWidth}
-                height={canvasHeight}
               />
             )}
 
@@ -394,21 +453,69 @@ function App() {
           overflow: hidden;
         }
 
+        .app-container.fullscreen .app-footer {
+          display: none;
+        }
+        .app-container.fullscreen .app-header {
+          border-bottom: none;
+          background: transparent;
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 20;
+        }
+        .app-container.fullscreen .app-header:hover {
+          background: var(--bg-panel);
+        }
+        .app-container.fullscreen .canvas-area {
+          padding: 0;
+        }
+        .app-container.fullscreen .canvas-container {
+          border: none;
+          border-radius: 0;
+          box-shadow: none;
+          max-width: 100%;
+        }
+
         .app-sidebar {
+          position: relative;
           width: 340px;
           min-width: 340px;
           border-right: 1px solid var(--border);
           padding: 20px;
           overflow-y: auto;
+          overflow-x: visible;
           background: var(--bg);
           z-index: 5;
+          transition: width 0.25s ease, min-width 0.25s ease, padding 0.25s ease, border-color 0.25s ease;
         }
 
         .app-sidebar.closed {
           width: 0;
           min-width: 0;
-          padding: 0;
-          overflow: hidden;
+          padding: 20px 0;
+          overflow-y: hidden;
+          border-right-color: transparent;
+        }
+
+        @media (max-width: 1200px) {
+          .app-sidebar:not(.closed) {
+            width: 280px;
+            min-width: 280px;
+            padding: 16px;
+          }
+        }
+
+        @media (max-width: 900px) {
+          .app-sidebar:not(.closed) {
+            width: 240px;
+            min-width: 240px;
+            padding: 12px;
+          }
+          .canvas-container {
+            padding: 12px;
+          }
         }
 
         .sidebar-section {
@@ -492,8 +599,8 @@ function App() {
         .canvas-area {
           flex: 1;
           display: flex;
-          align-items: center;
-          justify-content: center;
+          align-items: flex-end;
+          justify-content: flex-start;
           padding: 24px;
           background: linear-gradient(135deg, var(--bg) 0%, var(--code-bg) 100%);
           overflow: hidden;
@@ -521,7 +628,6 @@ function App() {
           background: var(--bg-panel);
           border: 1px solid var(--border);
           border-radius: 20px;
-          padding: 24px;
           box-sizing: border-box;
           box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
           position: relative;
@@ -529,14 +635,12 @@ function App() {
         }
         
         .canvas-container canvas {
-          max-width: 100% !important;
-          max-height: 100% !important;
-          width: auto !important;
-          height: auto !important;
-          object-fit: contain;
-          margin: auto;
           display: block;
           border-radius: 12px;
+        }
+        .sorting-canvas {
+          width: 100%;
+          height: 100%;
         }
 
         .empty-state {
@@ -641,6 +745,63 @@ function App() {
         .icon-btn:hover {
           background: var(--code-bg);
           color: var(--text-h);
+        }
+
+        .sidebar-handle {
+          flex-shrink: 0;
+          width: 20px;
+          height: 48px;
+          margin: auto 0;
+          border: 1px solid var(--border);
+          border-left: none;
+          border-radius: 0 8px 8px 0;
+          background: var(--bg-panel);
+          cursor: pointer;
+          color: var(--text);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 10;
+          transition: all 0.2s;
+          padding: 0;
+          position: relative;
+        }
+        .sidebar-handle:hover {
+          background: var(--code-bg);
+          color: var(--text-h);
+          border-color: var(--primary);
+        }
+        .app-sidebar.closed + .sidebar-handle {
+          width: 20px;
+          border-radius: 0 8px 8px 0;
+          border: 1px solid var(--border);
+          border-left: none;
+          margin-left: 0;
+        }
+
+        .skeleton-overlay {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 16px;
+          padding: 60px;
+        }
+        .skeleton-spinner {
+          width: 40px;
+          height: 40px;
+          border: 3px solid var(--border);
+          border-top-color: var(--primary);
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        .skeleton-text {
+          font-size: 14px;
+          color: var(--text);
+          margin: 0;
         }
 
         .help-overlay {
@@ -780,6 +941,27 @@ function App() {
         @keyframes feedback-in {
           from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
           to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        .app-sidebar::-webkit-scrollbar,
+        .theory-content::-webkit-scrollbar {
+          width: 6px;
+        }
+        .app-sidebar::-webkit-scrollbar-track,
+        .theory-content::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .app-sidebar::-webkit-scrollbar-thumb,
+        .theory-content::-webkit-scrollbar-thumb {
+          background: var(--border);
+          border-radius: 3px;
+        }
+        .app-sidebar::-webkit-scrollbar-thumb:hover,
+        .theory-content::-webkit-scrollbar-thumb:hover {
+          background: var(--text);
+        }
+        .theory-content {
+          overflow-y: auto;
         }
       `}</style>
     </div>

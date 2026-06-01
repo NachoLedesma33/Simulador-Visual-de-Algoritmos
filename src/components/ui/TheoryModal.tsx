@@ -36,24 +36,36 @@ export function TheoryModal({ algorithmType, onClose }: TheoryModalProps) {
   if (!theory) return null;
 
   const formatPseudocode = (code: string) => {
-    return code.split('\n').map((line, idx) => {
-      const trimmed = line.trim();
-      let formattedLine = trimmed;
-      const indentLevel = line.search(/\S/);
+    const keyWordPatterns: [RegExp, string][] = [
+      [/\b(function|end\s*function)\b/g, 'kw-func'],
+      [/\b(if|then|else|end\s*if|while|end\s*while|for|end\s*for|repeat|until|do)\b/g, 'kw-control'],
+      [/\b(return|break|continue|exit)\b/g, 'kw-flow'],
+      [/\b(const|let|var)\b/g, 'kw-decl'],
+      [/\b(true|false|empty|null|infinity)\b/g, 'kw-literal'],
+      [/\b(and|or|not|in|to|is|of)\b/g, 'kw-op'],
+      [/\b(push|pop|shift|unshift|insert|remove|append|prepend|swap|sort|compare)\b/g, 'kw-action'],
+      [/\b(array|list|queue|stack|set|map|graph|node|edge|grid|cell|row|col)\b/g, 'kw-type'],
+      [/\/\/.*/g, 'comment'],
+      [/#.*/g, 'comment'],
+      [/\b(\d+)\b/g, 'number'],
+      [/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g, 'string'],
+    ];
 
-      const keywords = ['function', 'if', 'else', 'while', 'for', 'return', 'const', 'let', 'var', 'in', 'to', 'not', 'true', 'false', 'empty', 'push', 'pop', 'shift', 'continue', 'break'];
-      const isKeyword = keywords.some(kw => trimmed.startsWith(kw) || trimmed.includes(` ${kw}`) || trimmed.includes(`(${kw}`));
-      const isComment = trimmed.startsWith('//') || trimmed.startsWith('#');
-      const isFunction = trimmed.startsWith('function');
-      const isControl = /\b(if|while|for|return|else)\b/.test(trimmed);
+    return code.split('\n').map((line, idx) => {
+      const indentLevel = line.search(/\S/);
+      let formatted = line;
+
+      for (const [pattern, cls] of keyWordPatterns) {
+        formatted = formatted.replace(pattern, (match) =>
+          cls === 'comment'
+            ? `<span class="hl ${cls}">${match}</span>`
+            : `<span class="hl ${cls}">${match}</span>`
+        );
+      }
 
       return (
-        <div 
-          key={idx} 
-          className={`code-line ${isComment ? 'comment' : ''} ${isKeyword ? 'keyword' : ''} ${isFunction ? 'function' : ''} ${isControl ? 'control' : ''}`}
-          style={{ paddingLeft: `${indentLevel * 12}px` }}
-        >
-          {formattedLine || '\n'}
+        <div key={idx} className="code-line" style={{ paddingLeft: `${Math.max(0, indentLevel) * 12}px` }}>
+          <span dangerouslySetInnerHTML={{ __html: formatted || '&nbsp;' }} />
         </div>
       );
     });
@@ -486,24 +498,21 @@ export function TheoryModal({ algorithmType, onClose }: TheoryModalProps) {
 
         .code-line {
           white-space: pre;
+          min-height: 1.2em;
         }
 
-        .code-line.keyword {
-          color: #8b5cf6;
-        }
-
-        .code-line.function {
-          color: #3b82f6;
-        }
-
-        .code-line.control {
-          color: #f59e0b;
-        }
-
-        .code-line.comment {
-          color: var(--text);
-          opacity: 0.6;
-        }
+        .hl { font-weight: 500; }
+        .hl.kw-func { color: #3b82f6; }
+        .hl.kw-control { color: #f59e0b; }
+        .hl.kw-flow { color: #ef4444; }
+        .hl.kw-decl { color: #8b5cf6; }
+        .hl.kw-literal { color: #06b6d4; }
+        .hl.kw-op { color: #a1a1aa; }
+        .hl.kw-action { color: #22c55e; }
+        .hl.kw-type { color: #ec4899; }
+        .hl.comment { color: var(--text); opacity: 0.5; font-style: italic; }
+        .hl.number { color: #f97316; }
+        .hl.string { color: #22c55e; }
 
         @media (max-width: 520px) {
           .theory-modal {

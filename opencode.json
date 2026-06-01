@@ -3,11 +3,11 @@
   "command": {
     "commit": {
       "description": "Hace commit de los cambios actuales con mensaje descriptivo en español",
-      "prompt": "Revisa los cambios con git diff, luego haz un commit con un mensaje descriptivo en español siguiendo las convenciones del proyecto"
+      "template": "Revisa los cambios con git diff, luego haz un commit con un mensaje descriptivo en español siguiendo las convenciones del proyecto"
     },
     "push": {
       "description": "Hace push de los commits al repositorio remoto",
-      "prompt": "Haz push de los commits al repositorio remoto"
+      "template": "Haz push de los commits al repositorio remoto"
     }
   }
 }

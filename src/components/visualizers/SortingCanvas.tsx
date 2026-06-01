@@ -6,8 +6,6 @@ import type { SortingStep } from '@/types';
 interface SortingCanvasProps {
   data: number[];
   step: SortingStep;
-  width: number;
-  height: number;
   options?: {
     showValues?: boolean;
     primaryColor?: string;
@@ -28,8 +26,6 @@ const PADDING = 2;
 export function SortingCanvas({
   data,
   step,
-  width,
-  height,
   options = {},
 }: SortingCanvasProps) {
   const { showValues = true, primaryColor } = options;
@@ -122,13 +118,8 @@ export function SortingCanvas({
   return (
     <canvas
       ref={canvasRef}
-      width={width}
-      height={height}
-      style={{
-        width: `${width}px`,
-        height: `${height}px`,
-        display: 'block',
-      }}
+      className="sorting-canvas"
+      style={{ display: 'block' }}
     />
   );
 }
