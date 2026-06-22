@@ -2,6 +2,8 @@ import { useCallback, useState, useEffect } from 'react';
 import { getAlgorithmTheory } from '@/constants/theory';
 import type { AlgorithmTheory, SupportedAlgorithmType } from '@/constants/theory';
 import type { AlgorithmType } from '@/types';
+import { ALGORITHM_SNIPPETS, LANGUAGES, LANGUAGE_LABELS } from '@/constants/codeSnippets';
+import type { SupportedLanguage } from '@/constants/codeSnippets';
 
 interface TheoryModalProps {
   algorithmType: AlgorithmType | null;
@@ -11,12 +13,14 @@ interface TheoryModalProps {
 export function TheoryModal({ algorithmType, onClose }: TheoryModalProps) {
   const [theory, setTheory] = useState<AlgorithmTheory | null>(null);
   const [activeTab, setActiveTab] = useState<'concept' | 'code' | 'usage'>('concept');
+  const [codeLang, setCodeLang] = useState<SupportedLanguage>('python');
 
   useEffect(() => {
     if (algorithmType) {
       const theoryData = getAlgorithmTheory(algorithmType as SupportedAlgorithmType);
       setTheory(theoryData);
     }
+    setCodeLang('python');
   }, [algorithmType]);
 
   const handleKeyDown = useCallback(
@@ -34,40 +38,6 @@ export function TheoryModal({ algorithmType, onClose }: TheoryModalProps) {
   }, [handleKeyDown]);
 
   if (!theory) return null;
-
-  const formatPseudocode = (code: string) => {
-    const keyWordPatterns: [RegExp, string][] = [
-      [/\b(function|end\s*function)\b/g, 'kw-func'],
-      [/\b(if|then|else|end\s*if|while|end\s*while|for|end\s*for|repeat|until|do)\b/g, 'kw-control'],
-      [/\b(return|break|continue|exit)\b/g, 'kw-flow'],
-      [/\b(const|let|var)\b/g, 'kw-decl'],
-      [/\b(true|false|empty|null|infinity)\b/g, 'kw-literal'],
-      [/\b(and|or|not|in|to|is|of)\b/g, 'kw-op'],
-      [/\b(push|pop|shift|unshift|insert|remove|append|prepend|swap|sort|compare)\b/g, 'kw-action'],
-      [/\b(array|list|queue|stack|set|map|graph|node|edge|grid|cell|row|col)\b/g, 'kw-type'],
-      [/\/\/.*/g, 'comment'],
-      [/#.*/g, 'comment'],
-      [/\b(\d+)\b/g, 'number'],
-      [/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g, 'string'],
-    ];
-
-    return code.split('\n').map((line, idx) => {
-      const indentLevel = line.search(/\S/);
-      let formatted = line;
-
-      for (const [pattern, cls] of keyWordPatterns) {
-        formatted = formatted.replace(pattern, (match) =>
-          `<span class="hl ${cls}">${match}</span>`
-        );
-      }
-
-      return (
-        <div key={idx} className="theory-code-line" style={{ paddingLeft: `${Math.max(0, indentLevel) * 12}px` }}>
-          <span dangerouslySetInnerHTML={{ __html: formatted || '&nbsp;' }} />
-        </div>
-      );
-    });
-  };
 
   return (
     <div className="theory-overlay" onClick={onClose}>
@@ -173,10 +143,20 @@ export function TheoryModal({ algorithmType, onClose }: TheoryModalProps) {
           {activeTab === 'code' && (
             <div className="theory-tab-content">
               <div className="theory-code-header">
-                <span className="theory-code-lang">Pseudocode</span>
+                <div className="theory-code-lang-pills">
+                  {LANGUAGES.map((lang) => (
+                    <button
+                      key={lang}
+                      className={`theory-lang-pill ${codeLang === lang ? 'active' : ''}`}
+                      onClick={() => setCodeLang(lang)}
+                    >
+                      {LANGUAGE_LABELS[lang]}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="theory-pseudocode-wrapper">
-                <pre className="theory-pseudocode">{formatPseudocode(theory.pseudocode)}</pre>
+                <pre className="theory-pseudocode"><code>{ALGORITHM_SNIPPETS[theory.id]?.[codeLang] ?? theory.pseudocode}</code></pre>
               </div>
             </div>
           )}
@@ -458,15 +438,34 @@ export function TheoryModal({ algorithmType, onClose }: TheoryModalProps) {
           margin-bottom: 10px;
         }
 
-        .theory-code-lang {
+        .theory-code-lang-pills {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 4px;
+        }
+
+        .theory-lang-pill {
           font-size: 10px;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: var(--primary);
-          background: var(--primary-dim);
-          padding: 4px 10px;
+          font-weight: 500;
+          padding: 3px 8px;
+          border: 1px solid var(--border);
           border-radius: 6px;
+          background: var(--bg-card);
+          color: var(--text-muted);
+          cursor: pointer;
+          transition: all 0.15s;
+        }
+
+        .theory-lang-pill:hover {
+          border-color: var(--primary);
+          color: var(--text);
+        }
+
+        .theory-lang-pill.active {
+          background: var(--primary-dim);
+          border-color: var(--primary);
+          color: var(--primary);
+          font-weight: 600;
         }
 
         .theory-pseudocode-wrapper {
@@ -484,27 +483,11 @@ export function TheoryModal({ algorithmType, onClose }: TheoryModalProps) {
           line-height: 1.7;
           color: var(--text);
           overflow-x: auto;
+          overflow-y: auto;
           margin: 0;
-          max-height: 350px;
-        }
-
-        .theory-code-line {
+          max-height: 420px;
           white-space: pre;
-          min-height: 1.2em;
         }
-
-        .hl { font-weight: 500; }
-        .hl.kw-func { color: #22d3ee; }
-        .hl.kw-control { color: #f59e0b; }
-        .hl.kw-flow { color: #f43f5e; }
-        .hl.kw-decl { color: #a78bfa; }
-        .hl.kw-literal { color: #06b6d4; }
-        .hl.kw-op { color: #52525b; }
-        .hl.kw-action { color: #10b981; }
-        .hl.kw-type { color: #ec4899; }
-        .hl.comment { color: var(--text-muted); font-style: italic; }
-        .hl.number { color: #f97316; }
-        .hl.string { color: #10b981; }
 
         @media (max-width: 520px) {
           .theory-modal {
