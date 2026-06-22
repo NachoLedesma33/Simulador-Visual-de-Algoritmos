@@ -487,6 +487,7 @@ export function TheoryModal({ algorithmType, onClose }: TheoryModalProps) {
           margin: 0;
           max-height: 420px;
           white-space: pre;
+          text-align: left;
         }
 
         @media (max-width: 520px) {
