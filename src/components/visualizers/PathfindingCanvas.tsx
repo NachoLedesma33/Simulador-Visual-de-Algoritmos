@@ -11,15 +11,15 @@ interface PathfindingCanvasProps {
 }
 
 const LAYER_COLORS = {
-  wall: '#1e293b',
-  empty: '#f8fafc',
-  start: '#22c55e',
-  end: '#ef4444',
-  visited: '#93c5fd',
-  frontier: '#fde047',
-  path: '#15803d',
+  wall: '#151929',
+  empty: '#1a1f2e',
+  start: '#10b981',
+  end: '#f43f5e',
+  visited: '#22d3ee',
+  frontier: '#f59e0b',
+  path: '#10b981',
   active: '#ffffff',
-  gridLine: '#cbd5e1',
+  gridLine: '#1f2433',
 };
 
 export function PathfindingCanvas({

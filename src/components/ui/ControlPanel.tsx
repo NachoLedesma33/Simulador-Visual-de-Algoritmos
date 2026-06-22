@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAlgorithmStore, selectIsPlaying } from '@/store';
-import { getAlgorithmInfo, getAlgorithmsByCategory, ALGORITHM_CATEGORIES } from '@/algorithms';
+import { getAlgorithmInfo, getAlgorithmsByCategory } from '@/algorithms';
 import type { AlgorithmType, AlgorithmCategory } from '@/types';
 
 const CATEGORIES: AlgorithmCategory[] = ['sorting', 'pathfinding'];
@@ -28,7 +28,7 @@ export function ControlPanel({
   const selectedAlgorithm = state.currentAlgorithm;
   const algorithmInfo = selectedAlgorithm ? getAlgorithmInfo(selectedAlgorithm) : null;
 
-  const [showStats, setShowStats] = useState(true);
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleAlgorithmChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -39,8 +39,6 @@ export function ControlPanel({
     },
     []
   );
-
-  const [isDragging, setIsDragging] = useState(false);
 
   const handleSpeedChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -129,345 +127,302 @@ export function ControlPanel({
     };
   }, [isPlaying, state.delay, state.currentStep, state.totalSteps]);
 
-  const statusBadge = useMemo(() => {
-    switch (state.state) {
-      case 'running':
-        return { color: '#3b82f6', label: 'Ejecutando', icon: '▶' };
-      case 'paused':
-        return { color: '#f59e0b', label: 'Pausado', icon: '⏸' };
-      case 'completed':
-        return { color: '#22c55e', label: 'Completado', icon: '✓' };
-      default:
-        return { color: '#94a3b8', label: 'Listo', icon: '○' };
-    }
-  }, [state.state]);
+  const progressPercent = state.totalSteps > 0
+    ? (state.currentStep / (state.totalSteps - 1)) * 100
+    : 0;
 
   return (
     <div className="control-panel">
-      <div className="panel-header">
-        <div className="panel-indicator"/>
-        <span className="panel-title">Panel de Control</span>
-      </div>
-
-      <div className="panel-section">
-        <label className="field-label">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="label-icon">
-            <path d="M2 4h10M2 7h10M2 10h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-          </svg>
-          Algoritmo
-        </label>
-        <div className="select-wrapper">
-          <select
-            className="algorithm-select"
-            value={selectedAlgorithm || ''}
-            onChange={handleAlgorithmChange}
-          >
-            <option value="" disabled>Seleccionar algoritmo...</option>
-            {algorithmOptions.map(({ category, label, algorithms }) => (
-              <optgroup key={category} label={label}>
-                {algorithms.map((algo) => {
-                  const info = getAlgorithmInfo(algo);
-                  return (
-                    <option key={algo} value={algo}>
-                      {info.name}
-                    </option>
-                  );
-                })}
-              </optgroup>
-            ))}
-          </select>
-          <svg className="select-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M3 5L6 8L9 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-          </svg>
+      {/* SECTION: ALGORITHM CONFIGURATION */}
+      <div className="cp-card">
+        <div className="cp-card-header">
+          <span className="cp-card-badge">ALGORITHM CONFIGURATION</span>
         </div>
-      </div>
-
-      <div className="panel-section playback-section">
-        <div className="playback-controls">
-          <button
-            className={`control-btn step-btn ${isPlaying ? 'active playing' : ''}`}
-            onClick={state.reset}
-            disabled={!selectedAlgorithm}
-            title="Reiniciar (R)"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M2 8a6 6 0 1 1 1.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              <path d="M2 3V8h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-
-          <button
-            className={`control-btn prev-btn ${!selectedAlgorithm || state.currentStep === 0 ? 'disabled' : ''}`}
-            onClick={state.previousStep}
-            disabled={!selectedAlgorithm || state.currentStep === 0}
-            title="Anterior (←)"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-
-          <button
-            className={`control-btn play-btn ${isPlaying ? 'pause' : ''}`}
-            onClick={isPlaying ? state.pause : state.play}
-            disabled={!selectedAlgorithm}
-            title={isPlaying ? 'Pausar (Espacio)' : 'Iniciar (Espacio)'}
-          >
-            {isPlaying ? (
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <rect x="5" y="4" width="3" height="12" rx="1" fill="currentColor"/>
-                <rect x="12" y="4" width="3" height="12" rx="1" fill="currentColor"/>
-              </svg>
-            ) : (
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M5 3L17 10L5 17V3Z" fill="currentColor"/>
-              </svg>
-            )}
-          </button>
-
-          <button
-            className={`control-btn next-btn ${!selectedAlgorithm || state.currentStep >= state.totalSteps - 1 ? 'disabled' : ''}`}
-            onClick={state.nextStep}
-            disabled={!selectedAlgorithm || state.currentStep >= state.totalSteps - 1}
-            title="Siguiente (→)"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-
-          <button
-            className="control-btn stop-btn"
-            onClick={() => state.reset()}
-            disabled={!selectedAlgorithm}
-            title="Ir al inicio"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M3 3V13h2V3H3ZM9 3V13h4V3H9Z" fill="currentColor"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      <div className="panel-section">
-        <div className="speed-display">
-          <label className="field-label">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="label-icon">
-              <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5"/>
-              <path d="M7 4V7L9 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-            Velocidad
-          </label>
-          <span className="speed-value">{state.speed}%</span>
-        </div>
-        <div 
-          className={`slider-wrapper ${isDragging ? 'dragging' : ''}`}
-          onMouseDown={handleSpeedDragStart}
-        >
-          <input
-            type="range"
-            className="speed-slider"
-            min="1"
-            max="100"
-            value={state.speed}
-            onChange={handleSpeedChange}
-          />
-          <div className="slider-track">
-            <div className="slider-fill" style={{ width: `${state.speed}%` }}/>
-            <div className="slider-thumb" style={{ left: `${state.speed}%` }}/>
-          </div>
-          <div className="slider-ticks">
-            <span>1</span>
-            <span>50</span>
-            <span>100</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="panel-section status-section">
-        <div className="status-badge" style={{ '--status-color': statusBadge.color } as any}>
-          <span className="status-dot"/>
-          <span className="status-text">{statusBadge.label}</span>
-          <span className="status-step">
-            {state.currentStep + 1} / {state.totalSteps || 1}
-          </span>
-        </div>
-      </div>
-
-      {selectedAlgorithm && algorithmInfo && (
-        <>
-          <button
-            className="info-toggle-btn"
-            onClick={() => setShowStats(!showStats)}
-          >
-            <span>Información</span>
-            <svg className={`toggle-arrow ${showStats ? 'open' : ''}`} width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <div className="cp-card-body">
+          <div className="select-wrapper">
+            <select
+              className="algorithm-select"
+              value={selectedAlgorithm || ''}
+              onChange={handleAlgorithmChange}
+            >
+              <option value="" disabled>Seleccionar algoritmo...</option>
+              {algorithmOptions.map(({ category, label, algorithms }) => (
+                <optgroup key={category} label={label}>
+                  {algorithms.map((algo) => {
+                    const info = getAlgorithmInfo(algo);
+                    return (
+                      <option key={algo} value={algo}>
+                        {info.name}
+                      </option>
+                    );
+                  })}
+                </optgroup>
+              ))}
+            </select>
+            <svg className="select-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
               <path d="M3 5L6 8L9 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
-          </button>
-
-          {showStats && (
-            <div className="stats-panel">
-              <div className="complexity-grid">
-                <div className="complexity-item">
-                  <span className="complexity-label">Tiempo</span>
-                  <span className="complexity-value">{algorithmInfo.complexity.time}</span>
-                </div>
-                <div className="complexity-item">
-                  <span className="complexity-label">Espacio</span>
-                  <span className="complexity-value">{algorithmInfo.complexity.space}</span>
-                </div>
-              </div>
-              {algorithmInfo.bestCase && (
-                <div className="complexity-item best">
-                  <span className="complexity-label">Mejor caso</span>
-                  <span className="complexity-value">{algorithmInfo.bestCase}</span>
-                </div>
-              )}
-              {algorithmInfo.worstCase && (
-                <div className="complexity-item worst">
-                  <span className="complexity-label">Peor caso</span>
-                  <span className="complexity-value">{algorithmInfo.worstCase}</span>
-                </div>
-              )}
-              <p className="stat-description">{algorithmInfo.description}</p>
+          </div>
+          {selectedAlgorithm && algorithmInfo && (
+            <div className="algo-meta">
+              <span className="algo-meta-item">
+                <span className="algo-meta-label">Tiempo</span>
+                <span className="algo-meta-value">{algorithmInfo.complexity.time}</span>
+              </span>
+              <span className="algo-meta-item">
+                <span className="algo-meta-label">Espacio</span>
+                <span className="algo-meta-value">{algorithmInfo.complexity.space}</span>
+              </span>
             </div>
           )}
-        </>
-      )}
-
-      <div className="panel-section">
-        <label className="field-label">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="label-icon">
-            <rect x="2" y="2" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.5"/>
-            <path d="M5 7h4M7 5v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-          </svg>
-          Datos
-        </label>
-        <div className="generator-buttons">
-          {selectedAlgorithm &&
-            ALGORITHM_CATEGORIES[selectedAlgorithm] === 'sorting' && (
-              <div className="button-group">
-                <button
-                  className="gen-btn"
-                  onClick={() => onDataGenerate?.('random')}
-                >
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <circle cx="7" cy="4" r="2" stroke="currentColor" strokeWidth="1.5"/>
-                    <path d="M3 12c0-2 2-4 4-4s4 2 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                  </svg>
-                  Aleatorio
-                </button>
-                <button
-                  className="gen-btn"
-                  onClick={() => onDataGenerate?.('nearly')}
-                >
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path d="M3 10L6 6L9 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                    <path d="M2 3h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                  </svg>
-                  Casi Ord.
-                </button>
-                <button
-                  className="gen-btn"
-                  onClick={() => onDataGenerate?.('reversed')}
-                >
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path d="M3 10L5 6L9 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                  </svg>
-                  Inverso
-                </button>
-              </div>
-            )}
-
-          {selectedAlgorithm &&
-            ALGORITHM_CATEGORIES[selectedAlgorithm] === 'pathfinding' && (
-              <div className="button-group">
-                <button
-                  className="gen-btn"
-                  onClick={() => onGridGenerate?.('clear')}
-                >
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <rect x="3" y="3" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="1.5"/>
-                  </svg>
-                  Limpiar
-                </button>
-                <button
-                  className="gen-btn"
-                  onClick={() => onGridGenerate?.('random')}
-                >
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <rect x="3" y="3" width="3" height="3" stroke="currentColor" strokeWidth="1.5"/>
-                    <rect x="8" y="3" width="3" height="3" stroke="currentColor" strokeWidth="1.5"/>
-                    <rect x="3" y="8" width="3" height="3" stroke="currentColor" strokeWidth="1.5"/>
-                    <rect x="8" y="8" width="3" height="3" stroke="currentColor" strokeWidth="1.5"/>
-                  </svg>
-                  Muros
-                </button>
-              </div>
-            )}
         </div>
       </div>
+
+      {/* SECTION: PLAYBACK ENGINE */}
+      <div className="cp-card">
+        <div className="cp-card-header">
+          <span className="cp-card-badge">PLAYBACK ENGINE</span>
+        </div>
+        <div className="cp-card-body">
+          <div className="playback-controls">
+            <button
+              className={`cp-btn cp-btn-icon ${state.currentStep === 0 ? 'disabled' : ''}`}
+              onClick={state.reset}
+              disabled={!selectedAlgorithm}
+              title="Reiniciar (R)"
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M2 8a6 6 0 1 1 1.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M2 3V8h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+
+            <button
+              className={`cp-btn cp-btn-icon ${!selectedAlgorithm || state.currentStep === 0 ? 'disabled' : ''}`}
+              onClick={state.previousStep}
+              disabled={!selectedAlgorithm || state.currentStep === 0}
+              title="Anterior (←)"
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+
+            <button
+              className={`cp-btn cp-play-btn ${isPlaying ? 'pause' : ''}`}
+              onClick={isPlaying ? state.pause : state.play}
+              disabled={!selectedAlgorithm}
+              title={isPlaying ? 'Pausar (Espacio)' : 'Iniciar (Espacio)'}
+            >
+              {isPlaying ? (
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                  <rect x="5" y="4" width="3" height="12" rx="1" fill="currentColor"/>
+                  <rect x="12" y="4" width="3" height="12" rx="1" fill="currentColor"/>
+                </svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                  <path d="M5 3L17 10L5 17V3Z" fill="currentColor"/>
+                </svg>
+              )}
+            </button>
+
+            <button
+              className={`cp-btn cp-btn-icon ${!selectedAlgorithm || state.currentStep >= state.totalSteps - 1 ? 'disabled' : ''}`}
+              onClick={state.nextStep}
+              disabled={!selectedAlgorithm || state.currentStep >= state.totalSteps - 1}
+              title="Siguiente (→)"
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+
+            <button
+              className={`cp-btn cp-btn-icon ${!selectedAlgorithm ? 'disabled' : ''}`}
+              onClick={() => state.reset()}
+              disabled={!selectedAlgorithm}
+              title="Ir al inicio"
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M3 3V13h2V3H3ZM9 3V13h4V3H9Z" fill="currentColor"/>
+              </svg>
+            </button>
+          </div>
+
+          <div className="speed-section">
+            <div className="speed-header">
+              <span className="speed-label">Velocidad</span>
+              <span className="speed-value">{state.speed}%</span>
+            </div>
+            <div
+              className={`slider-wrapper ${isDragging ? 'dragging' : ''}`}
+              onMouseDown={handleSpeedDragStart}
+            >
+              <input
+                type="range"
+                className="speed-slider"
+                min="1"
+                max="100"
+                value={state.speed}
+                onChange={handleSpeedChange}
+              />
+              <div className="slider-track">
+                <div className="slider-fill" style={{ width: `${state.speed}%` }}/>
+                <div className="slider-thumb" style={{ left: `${state.speed}%` }}/>
+              </div>
+            </div>
+          </div>
+
+          <div className="status-row">
+            <div className="status-dot" />
+            <span className="status-label">
+              {state.state === 'running' ? 'Ejecutando' :
+               state.state === 'paused' ? 'Pausado' :
+               state.state === 'completed' ? 'Completado' : 'Listo'}
+            </span>
+            <span className="status-steps">
+              {state.currentStep + 1} / {state.totalSteps || 1}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* SECTION: LIVE DIAGNOSTICS */}
+      {selectedAlgorithm && (
+        <div className="cp-card">
+          <div className="cp-card-header">
+            <span className="cp-card-badge">LIVE DIAGNOSTICS</span>
+          </div>
+          <div className="cp-card-body">
+            <div className="diagnostics-grid">
+              <div className="diag-item">
+                <span className="diag-label">Paso Actual</span>
+                <span className="diag-value">{state.currentStep + 1}</span>
+              </div>
+              <div className="diag-item">
+                <span className="diag-label">Total Pasos</span>
+                <span className="diag-value">{state.totalSteps}</span>
+              </div>
+              <div className="diag-item">
+                <span className="diag-label">Progreso</span>
+                <span className="diag-value">{Math.round(progressPercent)}%</span>
+              </div>
+              <div className="diag-item">
+                <span className="diag-label">Estado</span>
+                <span className={`diag-value diag-status ${state.state === 'running' ? 'running' : state.state === 'completed' ? 'completed' : ''}`}>
+                  {state.state === 'running' ? '▶' :
+                   state.state === 'paused' ? '⏸' :
+                   state.state === 'completed' ? '✓' : '○'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SECTION: DATA GENERATION */}
+      {selectedAlgorithm && (
+        <div className="cp-card">
+          <div className="cp-card-header">
+            <span className="cp-card-badge">DATA GENERATION</span>
+          </div>
+          <div className="cp-card-body">
+            {(() => {
+              const cat = algorithmInfo
+                ? (CATEGORIES.includes('sorting' as AlgorithmCategory) &&
+                   ['bubble', 'quick', 'merge', 'insertion', 'selection', 'heap', 'shell', 'radix', 'counting', 'tim'].includes(selectedAlgorithm)
+                  ? 'sorting' as AlgorithmCategory
+                  : 'pathfinding' as AlgorithmCategory)
+                : null;
+
+              const isSorting = cat === 'sorting';
+
+              return (
+                <div className="gen-grid">
+                  {isSorting ? (
+                    <>
+                      <button className="gen-btn" onClick={() => onDataGenerate?.('random')}>
+                        <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                          <circle cx="7" cy="4" r="2" stroke="currentColor" strokeWidth="1.5"/>
+                          <path d="M3 12c0-2 2-4 4-4s4 2 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                        </svg>
+                        Random
+                      </button>
+                      <button className="gen-btn" onClick={() => onDataGenerate?.('nearly')}>
+                        <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                          <path d="M3 10L6 6L9 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                          <path d="M2 3h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                        </svg>
+                        Casi Ord.
+                      </button>
+                      <button className="gen-btn" onClick={() => onDataGenerate?.('reversed')}>
+                        <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                          <path d="M3 10L5 6L9 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                        </svg>
+                        Inverso
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button className="gen-btn" onClick={() => onGridGenerate?.('clear')}>
+                        <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                          <rect x="3" y="3" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="1.5"/>
+                        </svg>
+                        Limpiar
+                      </button>
+                      <button className="gen-btn" onClick={() => onGridGenerate?.('random')}>
+                        <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                          <rect x="3" y="3" width="3" height="3" stroke="currentColor" strokeWidth="1.5"/>
+                          <rect x="8" y="3" width="3" height="3" stroke="currentColor" strokeWidth="1.5"/>
+                          <rect x="3" y="8" width="3" height="3" stroke="currentColor" strokeWidth="1.5"/>
+                          <rect x="8" y="8" width="3" height="3" stroke="currentColor" strokeWidth="1.5"/>
+                        </svg>
+                        Muros
+                      </button>
+                    </>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
 
       <style>{`
         .control-panel {
           display: flex;
           flex-direction: column;
-          gap: 16px;
-          padding: 20px;
-          background: var(--bg);
-          border-radius: 16px;
-          font-family: var(--sans);
+          gap: 12px;
         }
 
-        .panel-header {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding-bottom: 12px;
+        .cp-card {
+          background: var(--bg-card);
+          border: 1px solid var(--border);
+          border-radius: 14px;
+          overflow: hidden;
+          transition: border-color 0.2s;
+        }
+
+        .cp-card:hover {
+          border-color: var(--border-hover);
+        }
+
+        .cp-card-header {
+          padding: 10px 14px;
           border-bottom: 1px solid var(--border);
+          background: rgba(255, 255, 255, 0.02);
         }
 
-        .panel-indicator {
-          width: 8px;
-          height: 8px;
-          background: var(--primary);
-          border-radius: 50%;
-          box-shadow: 0 0 8px var(--primary);
-          animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
-        }
-
-        .panel-title {
-          font-size: 13px;
+        .cp-card-badge {
+          font-size: 10px;
           font-weight: 600;
-          color: var(--text-h);
-          letter-spacing: 0.02em;
-        }
-
-        .panel-section {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .field-label {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 11px;
-          font-weight: 600;
+          letter-spacing: 0.1em;
+          color: var(--text-muted);
           text-transform: uppercase;
-          letter-spacing: 0.06em;
-          color: var(--text);
         }
 
-        .label-icon {
-          opacity: 0.7;
+        .cp-card-body {
+          padding: 12px 14px;
         }
 
         .select-wrapper {
@@ -476,12 +431,12 @@ export function ControlPanel({
 
         .algorithm-select {
           width: 100%;
-          padding: 12px 36px 12px 12px;
+          padding: 10px 32px 10px 12px;
           border: 1px solid var(--border);
           border-radius: 10px;
-          background: var(--bg-panel);
+          background: var(--code-bg);
           color: var(--text-h);
-          font-size: 14px;
+          font-size: 13px;
           font-weight: 500;
           cursor: pointer;
           transition: all 0.2s;
@@ -496,23 +451,47 @@ export function ControlPanel({
         .algorithm-select:focus {
           outline: none;
           border-color: var(--primary);
-          box-shadow: 0 0 0 3px var(--primary-surface);
+          box-shadow: 0 0 0 3px var(--primary-dim);
         }
 
         .select-arrow {
           position: absolute;
-          right: 12px;
+          right: 10px;
           top: 50%;
           transform: translateY(-50%);
-          color: var(--text);
+          color: var(--text-muted);
           pointer-events: none;
         }
 
-        .playback-section {
-          background: var(--bg-panel);
-          border: 1px solid var(--border);
-          border-radius: 12px;
-          padding: 12px;
+        .algo-meta {
+          display: flex;
+          gap: 8px;
+          margin-top: 10px;
+        }
+
+        .algo-meta-item {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          padding: 8px 10px;
+          background: var(--code-bg);
+          border-radius: 8px;
+        }
+
+        .algo-meta-label {
+          font-size: 9px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          color: var(--text-muted);
+        }
+
+        .algo-meta-value {
+          font-size: 13px;
+          font-weight: 600;
+          font-family: var(--mono);
+          color: var(--primary);
         }
 
         .playback-controls {
@@ -520,80 +499,85 @@ export function ControlPanel({
           align-items: center;
           justify-content: center;
           gap: 6px;
+          margin-bottom: 12px;
         }
 
-        .control-btn {
+        .cp-btn {
           display: flex;
           align-items: center;
           justify-content: center;
-          border: none;
+          border: 1px solid var(--border);
           border-radius: 10px;
           cursor: pointer;
           transition: all 0.2s;
-          background: transparent;
+          background: var(--code-bg);
           color: var(--text);
         }
 
-        .control-btn.disabled {
+        .cp-btn.disabled {
           opacity: 0.3;
           cursor: not-allowed;
         }
 
-        .step-btn {
+        .cp-btn-icon {
           width: 34px;
           height: 34px;
         }
 
-        .step-btn:hover:not(.disabled) {
-          background: var(--code-bg);
+        .cp-btn-icon:hover:not(.disabled) {
+          background: var(--bg-card);
+          border-color: var(--border-hover);
           color: var(--text-h);
         }
 
-        .prev-btn, .next-btn {
-          width: 34px;
-          height: 34px;
-        }
-
-        .prev-btn:hover:not(.disabled), .next-btn:hover:not(.disabled) {
-          background: var(--code-bg);
-          color: var(--text-h);
-        }
-
-        .play-btn {
+        .cp-play-btn {
           width: 48px;
           height: 48px;
           background: var(--primary);
-          color: white;
+          color: #000;
+          border-color: var(--primary);
           border-radius: 50%;
+          box-shadow: 0 0 20px var(--primary-glow);
         }
 
-        .play-btn:hover:not(:disabled) {
+        .cp-play-btn:hover:not(:disabled) {
           background: var(--primary-hover);
           transform: scale(1.05);
+          box-shadow: 0 0 30px var(--primary-glow);
         }
 
-        .play-btn.pause {
+        .cp-play-btn.pause {
           background: var(--danger);
+          border-color: var(--danger);
+          box-shadow: 0 0 20px var(--danger-glow);
         }
 
-        .stop-btn {
-          width: 34px;
-          height: 34px;
+        .cp-play-btn.pause:hover:not(:disabled) {
+          background: var(--danger-hover);
+          box-shadow: 0 0 30px var(--danger-glow);
         }
 
-        .stop-btn:hover:not(.disabled) {
-          background: var(--code-bg);
-          color: var(--text-h);
+        .speed-section {
+          margin-bottom: 12px;
         }
 
-        .speed-display {
+        .speed-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
+          margin-bottom: 8px;
+        }
+
+        .speed-label {
+          font-size: 11px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          color: var(--text-muted);
         }
 
         .speed-value {
-          font-size: 14px;
+          font-size: 13px;
           font-weight: 600;
           font-family: var(--mono);
           color: var(--primary);
@@ -601,21 +585,16 @@ export function ControlPanel({
 
         .slider-wrapper {
           position: relative;
-          height: 32px;
+          height: 24px;
           display: flex;
           flex-direction: column;
           justify-content: center;
-          gap: 8px;
           cursor: pointer;
           user-select: none;
         }
 
         .slider-wrapper.dragging {
           cursor: grabbing;
-        }
-
-        .slider-wrapper:hover .slider-thumb {
-          transform: translate(-50%, -50%) scale(1.15);
         }
 
         .speed-slider {
@@ -630,10 +609,10 @@ export function ControlPanel({
 
         .slider-track {
           position: relative;
-          height: 8px;
-          background: var(--bg-panel);
+          height: 6px;
+          background: var(--code-bg);
           border: 1px solid var(--border);
-          border-radius: 4px;
+          border-radius: 3px;
           overflow: visible;
         }
 
@@ -650,182 +629,119 @@ export function ControlPanel({
         .slider-thumb {
           position: absolute;
           top: 50%;
-          width: 20px;
-          height: 20px;
-          background: white;
-          border: 3px solid var(--primary);
+          width: 16px;
+          height: 16px;
+          background: var(--bg-panel);
+          border: 2px solid var(--primary);
           border-radius: 50%;
           transform: translate(-50%, -50%);
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-          transition: left 0.05s, transform 0.1s;
+          box-shadow: 0 0 8px var(--primary-glow);
+          transition: left 0.05s;
           z-index: 5;
         }
 
-        .slider-thumb:hover {
-          transform: translate(-50%, -50%) scale(1.15);
+        .slider-wrapper:hover .slider-thumb {
+          transform: translate(-50%, -50%) scale(1.1);
         }
 
-        .slider-thumb::after {
-          content: '';
-          position: absolute;
-          inset: -8px;
-        }
-
-        .slider-ticks {
-          display: flex;
-          justify-content: space-between;
-          font-size: 10px;
-          color: var(--text);
-          font-family: var(--mono);
-        }
-
-        .status-section {
-          background: var(--bg-panel);
-          border: 1px solid var(--border);
-          border-radius: 10px;
-          padding: 4px;
-        }
-
-        .status-badge {
+        .status-row {
           display: flex;
           align-items: center;
           gap: 8px;
-          padding: 6px 10px;
-          background: var(--bg);
+          padding: 8px 10px;
+          background: var(--code-bg);
           border-radius: 8px;
         }
 
         .status-dot {
-          width: 8px;
-          height: 8px;
+          width: 6px;
+          height: 6px;
           border-radius: 50%;
-          background: var(--status-color);
-          box-shadow: 0 0 6px var(--status-color);
+          background: var(--primary);
+          box-shadow: 0 0 6px var(--primary-glow);
         }
 
-        .status-text {
+        .status-label {
           flex: 1;
-          font-size: 13px;
-          font-weight: 500;
-          color: var(--text-h);
-        }
-
-        .status-step {
           font-size: 12px;
-          font-family: var(--mono);
+          font-weight: 500;
           color: var(--text);
         }
 
-        .info-toggle-btn {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 10px 12px;
-          background: var(--bg-panel);
-          border: 1px solid var(--border);
-          border-radius: 10px;
-          cursor: pointer;
-          font-size: 13px;
-          font-weight: 500;
-          color: var(--text-h);
-          transition: all 0.2s;
+        .status-steps {
+          font-size: 11px;
+          font-family: var(--mono);
+          color: var(--text-muted);
         }
 
-        .info-toggle-btn:hover {
-          background: var(--code-bg);
-        }
-
-        .toggle-arrow {
-          transition: transform 0.2s;
-        }
-
-        .toggle-arrow.open {
-          transform: rotate(180deg);
-        }
-
-        .stats-panel {
-          background: var(--bg-panel);
-          border: 1px solid var(--border);
-          border-radius: 12px;
-          padding: 14px;
-        }
-
-        .complexity-grid {
+        .diagnostics-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 10px;
-          margin-bottom: 10px;
+          gap: 8px;
         }
 
-        .complexity-item {
+        .diag-item {
           display: flex;
           flex-direction: column;
           gap: 2px;
-        }
-
-        .complexity-item.best {
-          background: var(--success-surface);
-          padding: 8px 10px;
+          padding: 10px;
+          background: var(--code-bg);
           border-radius: 8px;
-          margin-bottom: 6px;
         }
 
-        .complexity-item.worst {
-          background: var(--danger-surface);
-          padding: 8px 10px;
-          border-radius: 8px;
-          margin-bottom: 10px;
-        }
-
-        .complexity-label {
-          font-size: 10px;
+        .diag-label {
+          font-size: 9px;
           font-weight: 600;
           text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: var(--text);
+          letter-spacing: 0.08em;
+          color: var(--text-muted);
         }
 
-        .complexity-value {
-          font-size: 14px;
-          font-weight: 600;
+        .diag-value {
+          font-size: 18px;
+          font-weight: 700;
           font-family: var(--mono);
           color: var(--text-h);
         }
 
-        .stat-description {
-          font-size: 12px;
-          line-height: 1.5;
-          color: var(--text);
-          margin: 0;
+        .diag-value.diag-status {
+          font-size: 20px;
         }
 
-        .generator-buttons {
-          margin-top: 4px;
+        .diag-value.diag-status.running {
+          color: var(--primary);
         }
 
-        .button-group {
+        .diag-value.diag-status.completed {
+          color: var(--success);
+        }
+
+        .gen-grid {
           display: flex;
           gap: 6px;
           flex-wrap: wrap;
         }
 
         .gen-btn {
+          flex: 1;
           display: flex;
           align-items: center;
-          gap: 6px;
-          padding: 10px 14px;
-          font-size: 12px;
+          justify-content: center;
+          gap: 5px;
+          padding: 8px 10px;
+          font-size: 11px;
           font-weight: 500;
-          background: var(--bg-panel);
+          background: var(--code-bg);
           border: 1px solid var(--border);
-          border-radius: 9px;
+          border-radius: 8px;
           color: var(--text);
           cursor: pointer;
           transition: all 0.2s;
+          min-width: 0;
         }
 
         .gen-btn:hover {
-          background: var(--primary-surface);
+          background: var(--primary-dim);
           border-color: var(--primary);
           color: var(--primary);
         }

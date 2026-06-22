@@ -36,7 +36,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     id: 4,
     title: 'Controles de Reproducción',
     content:
-      'Usa los botones ▶⏸ para reproducir/pausar.调节 La barra de velocidad controla qué tan rápido avanza el algoritmo.',
+      'Usa los botones ▶⏸ para reproducir/pausar. La barra de velocidad controla qué tan rápido avanza el algoritmo.',
     icon: '🎮',
     highlight: '.control-panel',
   },
@@ -136,88 +136,93 @@ export function TutorialModal({ onComplete }: TutorialModalProps) {
   const progress = ((currentStep + 1) / TUTORIAL_STEPS.length) * 100;
 
   return (
-    <div className="tutorial-overlay" onClick={handleSkip}>
+    <div className="tut-overlay" onClick={handleSkip}>
       <div
-        className="tutorial-modal"
+        className="tut-modal"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="tutorial-title"
+        aria-labelledby="tut-title"
       >
-        <button className="close-btn" onClick={handleClose} aria-label="Cerrar">
-          ✕
+        <button className="tut-close" onClick={handleClose} aria-label="Cerrar">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
         </button>
 
-        <div className="tutorial-icon">{step.icon}</div>
+        <div className="tut-icon-wrap">
+          <span className="tut-icon">{step.icon}</span>
+        </div>
 
-        <h2 id="tutorial-title" className="tutorial-title">
+        <h2 id="tut-title" className="tut-title">
           {step.title}
         </h2>
 
-        <p className="tutorial-content">{step.content}</p>
+        <p className="tut-content">{step.content}</p>
 
-        <div className="progress-dots">
+        <div className="tut-dots">
           {TUTORIAL_STEPS.map((_, idx) => (
             <span
               key={idx}
-              className={`dot ${idx === currentStep ? 'active' : ''} ${
+              className={`tut-dot ${idx === currentStep ? 'active' : ''} ${
                 idx < currentStep ? 'completed' : ''
               }`}
             />
           ))}
         </div>
 
-        <div className="progress-bar">
-          <div className="progress-fill" style={{ width: `${progress}%` }} />
+        <div className="tut-progress">
+          <div className="tut-progress-fill" style={{ width: `${progress}%` }} />
         </div>
 
-        <div className="tutorial-actions">
+        <div className="tut-actions">
           {currentStep > 0 && (
-            <button className="btn btn-secondary" onClick={handlePrev}>
+            <button className="tut-btn tut-btn-secondary" onClick={handlePrev}>
               ← Atrás
             </button>
           )}
 
-          <button className="btn btn-text" onClick={handleSkip}>
+          <button className="tut-btn tut-btn-ghost" onClick={handleSkip}>
             Saltar
           </button>
 
-          <button className="btn btn-primary" onClick={handleNext}>
+          <button className="tut-btn tut-btn-primary" onClick={handleNext}>
             {isLastStep ? '¡Comenzar!' : 'Siguiente →'}
           </button>
         </div>
       </div>
 
       <style>{`
-        .tutorial-overlay {
+        .tut-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(0, 0, 0, 0.7);
-          backdrop-filter: blur(4px);
+          background: rgba(0, 0, 0, 0.75);
+          backdrop-filter: blur(6px);
           display: flex;
           align-items: center;
           justify-content: center;
           z-index: 1000;
-          animation: fadeIn 0.3s ease;
+          animation: tutFadeIn 0.3s ease;
         }
 
-        @keyframes fadeIn {
+        @keyframes tutFadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
         }
 
-        .tutorial-modal {
-          background: var(--bg);
-          border-radius: 16px;
+        .tut-modal {
+          background: var(--bg-panel);
+          border: 1px solid var(--border);
+          border-radius: 20px;
           padding: 32px;
           max-width: 400px;
           width: 90%;
           position: relative;
-          animation: slideUp 0.4s ease;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+          animation: tutSlideUp 0.4s ease;
+          box-shadow: var(--shadow-lg), 0 0 60px rgba(34, 211, 238, 0.05);
         }
 
-        @keyframes slideUp {
+        @keyframes tutSlideUp {
           from {
             transform: translateY(20px);
             opacity: 0;
@@ -228,44 +233,56 @@ export function TutorialModal({ onComplete }: TutorialModalProps) {
           }
         }
 
-        .close-btn {
+        .tut-close {
           position: absolute;
           top: 16px;
           right: 16px;
-          background: transparent;
-          border: none;
-          font-size: 18px;
+          background: var(--bg-card);
+          border: 1px solid var(--border);
           cursor: pointer;
-          opacity: 0.6;
           color: var(--text);
+          width: 32px;
+          height: 32px;
+          border-radius: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s;
         }
 
-        .close-btn:hover {
-          opacity: 1;
+        .tut-close:hover {
+          background: var(--danger-dim);
+          border-color: var(--danger);
+          color: var(--danger);
         }
 
-        .tutorial-icon {
-          font-size: 48px;
-          text-align: center;
-          margin-bottom: 16px;
-          animation: bounce 1s infinite;
+        .tut-icon-wrap {
+          width: 64px;
+          height: 64px;
+          border-radius: 50%;
+          background: var(--bg-card);
+          border: 1px solid var(--border);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 16px;
         }
 
-        @keyframes bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-8px); }
+        .tut-icon {
+          font-size: 32px;
+          line-height: 1;
         }
 
-        .tutorial-title {
-          font-size: 24px;
+        .tut-title {
+          font-size: 22px;
           font-weight: 700;
           text-align: center;
           margin: 0 0 12px;
           color: var(--text-h);
         }
 
-        .tutorial-content {
-          font-size: 15px;
+        .tut-content {
+          font-size: 14px;
           text-align: center;
           line-height: 1.6;
           color: var(--text);
@@ -273,14 +290,14 @@ export function TutorialModal({ onComplete }: TutorialModalProps) {
           min-height: 80px;
         }
 
-        .progress-dots {
+        .tut-dots {
           display: flex;
           justify-content: center;
           gap: 8px;
           margin-bottom: 12px;
         }
 
-        .dot {
+        .tut-dot {
           width: 8px;
           height: 8px;
           border-radius: 50%;
@@ -288,17 +305,18 @@ export function TutorialModal({ onComplete }: TutorialModalProps) {
           transition: all 0.3s;
         }
 
-        .dot.active {
+        .tut-dot.active {
           background: var(--primary);
+          box-shadow: 0 0 8px var(--primary-glow);
           transform: scale(1.3);
         }
 
-        .dot.completed {
+        .tut-dot.completed {
           background: var(--primary);
           opacity: 0.4;
         }
 
-        .progress-bar {
+        .tut-progress {
           height: 4px;
           background: var(--border);
           border-radius: 2px;
@@ -306,70 +324,76 @@ export function TutorialModal({ onComplete }: TutorialModalProps) {
           overflow: hidden;
         }
 
-        .progress-fill {
+        .tut-progress-fill {
           height: 100%;
-          background: var(--primary);
+          background: linear-gradient(90deg, var(--primary), var(--accent));
           transition: width 0.3s ease;
+          border-radius: 2px;
         }
 
-        .tutorial-actions {
+        .tut-actions {
           display: flex;
-          justify-content: space-between;
-          gap: 12px;
+          justify-content: flex-end;
+          gap: 8px;
         }
 
-        .btn {
+        .tut-btn {
           padding: 10px 16px;
-          border-radius: 8px;
-          font-size: 14px;
+          border-radius: 10px;
+          font-size: 13px;
           font-weight: 500;
           cursor: pointer;
           transition: all 0.2s;
           border: none;
+          font-family: inherit;
         }
 
-        .btn-primary {
+        .tut-btn-primary {
           background: var(--primary);
-          color: white;
+          color: #000;
           flex: 1;
         }
 
-        .btn-primary:hover {
-          opacity: 0.9;
+        .tut-btn-primary:hover {
+          background: var(--primary-hover);
+          box-shadow: 0 0 20px var(--primary-glow);
         }
 
-        .btn-secondary {
+        .tut-btn-secondary {
+          background: var(--bg-card);
+          color: var(--text);
+          border: 1px solid var(--border);
+        }
+
+        .tut-btn-secondary:hover {
           background: var(--code-bg);
-          color: var(--text);
-        }
-
-        .btn-secondary:hover {
-          background: var(--border);
-        }
-
-        .btn-text {
-          background: transparent;
-          color: var(--text);
-        }
-
-        .btn-text:hover {
+          border-color: var(--border-hover);
           color: var(--text-h);
         }
 
+        .tut-btn-ghost {
+          background: transparent;
+          color: var(--text-muted);
+        }
+
+        .tut-btn-ghost:hover {
+          color: var(--text);
+        }
+
         @media (max-width: 480px) {
-          .tutorial-modal {
+          .tut-modal {
             padding: 24px 20px;
           }
 
-          .tutorial-icon {
-            font-size: 40px;
+          .tut-icon {
+            font-size: 28px;
           }
 
-          .tutorial-title {
+          .tut-title {
             font-size: 20px;
           }
 
-          .tutorial-content {
+          .tut-content {
             font-size: 14px;
           }
         }

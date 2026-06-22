@@ -1,34 +1,41 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap');
 
 :root {
-  --text: #4b5563;
-  --text-h: #111827;
-  --bg: #f8fafc;
-  --bg-panel: #ffffff;
-  --border: #e2e8f0;
-  --code-bg: #f1f5f9;
-  --primary: #3b82f6;
-  --primary-hover: #2563eb;
-  --primary-surface: rgba(59, 130, 246, 0.08);
-  --danger: #ef4444;
-  --danger-hover: #dc2626;
+  --bg: #0a0e1a;
+  --bg-panel: #11141f;
+  --bg-card: #151929;
+  --border: #1f2433;
+  --border-hover: #2a3045;
+  --text: #9ca3af;
+  --text-h: #e5e7eb;
+  --text-muted: #6b7280;
+  --primary: #22d3ee;
+  --primary-hover: #67e8f9;
+  --primary-dim: rgba(34, 211, 238, 0.1);
+  --primary-glow: rgba(34, 211, 238, 0.25);
+  --danger: #f43f5e;
+  --danger-hover: #fb7185;
+  --danger-dim: rgba(244, 63, 94, 0.1);
+  --danger-glow: rgba(244, 63, 94, 0.25);
+  --accent: #ec4899;
+  --accent-dim: rgba(236, 72, 153, 0.1);
   --success: #10b981;
-  --success-surface: rgba(16, 185, 129, 0.08);
+  --success-dim: rgba(16, 185, 129, 0.1);
   --warning: #f59e0b;
-  --warning-surface: rgba(245, 158, 11, 0.08);
-  --accent: #8b5cf6;
-  --accent-surface: rgba(139, 92, 246, 0.08);
-  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+  --warning-dim: rgba(245, 158, 11, 0.1);
+  --code-bg: #0d111f;
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 48px rgba(0, 0, 0, 0.5);
+  --shadow-glow-cyan: 0 0 20px rgba(34, 211, 238, 0.15);
+  --shadow-glow-pink: 0 0 20px rgba(244, 63, 94, 0.15);
 
   --sans: 'Inter', system-ui, -apple-system, sans-serif;
   --heading: 'Outfit', system-ui, -apple-system, sans-serif;
   --mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
 
-  font: 16px/150% var(--sans);
+  font: 15px/150% var(--sans);
   letter-spacing: 0.01em;
-  color-scheme: light dark;
+  color-scheme: dark;
   color: var(--text);
   background: var(--bg);
   font-synthesis: none;
@@ -38,26 +45,33 @@
 }
 
 :root[data-theme="dark"] {
-  --text: #94a3b8;
-  --text-h: #f1f5f9;
-  --bg: #0f172a;
-  --bg-panel: #1e293b;
-  --border: #334155;
-  --code-bg: #0f172a;
-  --primary: #60a5fa;
-  --primary-hover: #3b82f6;
-  --primary-surface: rgba(96, 165, 250, 0.12);
-  --danger: #f87171;
-  --danger-hover: #ef4444;
-  --success: #34d399;
-  --success-surface: rgba(52, 211, 153, 0.12);
-  --warning: #fbbf24;
-  --warning-surface: rgba(251, 191, 36, 0.12);
-  --accent: #a78bfa;
-  --accent-surface: rgba(167, 139, 250, 0.12);
-  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4);
+  --bg: #0a0e1a;
+  --bg-panel: #11141f;
+  --bg-card: #151929;
+  --border: #1f2433;
+  --border-hover: #2a3045;
+  --text: #9ca3af;
+  --text-h: #e5e7eb;
+  --text-muted: #6b7280;
+  --primary: #22d3ee;
+  --primary-hover: #67e8f9;
+  --primary-dim: rgba(34, 211, 238, 0.1);
+  --primary-glow: rgba(34, 211, 238, 0.25);
+  --danger: #f43f5e;
+  --danger-hover: #fb7185;
+  --danger-dim: rgba(244, 63, 94, 0.1);
+  --danger-glow: rgba(244, 63, 94, 0.25);
+  --accent: #ec4899;
+  --accent-dim: rgba(236, 72, 153, 0.1);
+  --success: #10b981;
+  --success-dim: rgba(16, 185, 129, 0.1);
+  --warning: #f59e0b;
+  --warning-dim: rgba(245, 158, 11, 0.1);
+  --code-bg: #0d111f;
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 48px rgba(0, 0, 0, 0.5);
+  --shadow-glow-cyan: 0 0 20px rgba(34, 211, 238, 0.15);
+  --shadow-glow-pink: 0 0 20px rgba(244, 63, 94, 0.15);
 }
 
 #root {
@@ -75,7 +89,7 @@ body {
   margin: 0;
 }
 
-h1, h2 {
+h1, h2, h3, h4 {
   font-family: var(--heading);
   font-weight: 600;
   color: var(--text-h);
@@ -83,12 +97,12 @@ h1, h2 {
 }
 
 h1 {
-  font-size: 48px;
-  margin: 24px 0;
+  font-size: 28px;
+  margin: 0;
 }
 
 h2 {
-  font-size: 20px;
+  font-size: 18px;
   line-height: 130%;
   margin: 0 0 8px;
 }
@@ -99,7 +113,7 @@ p {
 
 code {
   font-family: var(--mono);
-  font-size: 14px;
+  font-size: 13px;
   padding: 2px 6px;
   background: var(--code-bg);
   border-radius: 4px;
@@ -107,8 +121,8 @@ code {
 }
 
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -117,16 +131,15 @@ code {
 
 ::-webkit-scrollbar-thumb {
   background: var(--border);
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text);
-  opacity: 0.5;
+  background: var(--text-muted);
 }
 
 ::selection {
-  background: var(--primary-surface);
+  background: var(--primary-dim);
   color: var(--text-h);
 }
 

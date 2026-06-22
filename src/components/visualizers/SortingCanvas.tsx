@@ -13,10 +13,10 @@ interface SortingCanvasProps {
 }
 
 const COLORS = {
-  comparing: '#ef4444',
-  swapping: '#3b82f6',
-  sorted: '#22c55e',
-  default: '#94a3b8',
+  comparing: '#f43f5e',
+  swapping: '#22d3ee',
+  sorted: '#10b981',
+  default: '#334155',
 };
 
 const MAX_BAR_HEIGHT_RATIO = 0.9;

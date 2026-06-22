@@ -276,46 +276,57 @@ export function GridEditor({
   }, [tool]);
 
   return (
-    <div className="grid-editor">
-      <div className="editor-toolbar">
-        <div className="tool-group">
+    <div className="ge-container">
+      <div className="ge-toolbar">
+        <div className="ge-tool-group">
           <button
-            className={`tool-btn ${tool === 'wall' ? 'active' : ''}`}
+            className={`ge-tool ${tool === 'wall' ? 'active' : ''}`}
             onClick={() => setTool('wall')}
             disabled={isLocked}
             title="Pared"
           >
-            █
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M2 6h12M6 2v12" stroke="currentColor" strokeWidth="1.5"/>
+            </svg>
           </button>
           <button
-            className={`tool-btn ${tool === 'start' ? 'active' : ''}`}
+            className={`ge-tool ${tool === 'start' ? 'active' : ''}`}
             onClick={() => setTool('start')}
             disabled={isLocked}
             title="Inicio"
           >
-            S
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="5" stroke="currentColor" strokeWidth="1.5"/>
+              <circle cx="8" cy="8" r="2" fill="currentColor"/>
+            </svg>
           </button>
           <button
-            className={`tool-btn ${tool === 'end' ? 'active' : ''}`}
+            className={`ge-tool ${tool === 'end' ? 'active' : ''}`}
             onClick={() => setTool('end')}
             disabled={isLocked}
             title="Fin"
           >
-            E
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <rect x="3" y="3" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M6 6L10 10M10 6L6 10" stroke="currentColor" strokeWidth="1.5"/>
+            </svg>
           </button>
           <button
-            className={`tool-btn ${tool === 'eraser' ? 'active' : ''}`}
+            className={`ge-tool ${tool === 'eraser' ? 'active' : ''}`}
             onClick={() => setTool('eraser')}
             disabled={isLocked}
             title="Borrador"
           >
-            ✕
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path d="M10 2L14 6L6 14L2 10L10 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+            </svg>
           </button>
         </div>
 
-        <div className="tool-group">
+        <div className="ge-tool-group">
           <select
-            className="size-select"
+            className="ge-select"
             value={gridSize.rows}
             onChange={handleSizeChange}
             disabled={isLocked}
@@ -328,21 +339,31 @@ export function GridEditor({
           </select>
         </div>
 
-        <div className="tool-group">
-          <button className="action-btn" onClick={handleGenerateRandom} disabled={isLocked}>
+        <div className="ge-tool-group">
+          <button className="ge-action" onClick={handleGenerateRandom} disabled={isLocked}>
+            <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+              <circle cx="7" cy="4" r="2" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M3 12c0-2 2-4 4-4s4 2 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
             Aleatorio
           </button>
-          <button className="action-btn" onClick={() => handleGeneratePreset('spiral')} disabled={isLocked}>
+          <button className="ge-action" onClick={() => handleGeneratePreset('spiral')} disabled={isLocked}>
+            <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+              <path d="M7 1v2M7 11v2M1 7h2M11 7h2M3.3 3.3l1.4 1.4M9.3 9.3l1.4 1.4M3.3 10.7l1.4-1.4M9.3 4.7l1.4-1.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
             Espiral
           </button>
-          <button className="action-btn" onClick={handleClear} disabled={isLocked}>
+          <button className="ge-action" onClick={handleClear} disabled={isLocked}>
+            <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+              <rect x="3" y="3" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="1.5"/>
+            </svg>
             Limpiar
           </button>
         </div>
       </div>
 
       <canvas
-        className="grid-canvas"
+        className="ge-canvas"
         width={grid[0].length * cellSize}
         height={grid.length * cellSize}
         onMouseDown={handleMouseDown}
@@ -353,17 +374,109 @@ export function GridEditor({
       />
 
       <style>{`
-        .grid-editor { display: flex; flex-direction: column; gap: 12px; }
-        .editor-toolbar { display: flex; gap: 12px; flex-wrap: wrap; padding: 8px; background: var(--code-bg); border-radius: 6px; }
-        .tool-group { display: flex; gap: 4px; }
-        .tool-btn { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); color: var(--text); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
-        .tool-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-        .tool-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .size-select { padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); color: var(--text); font-size: 12px; }
-        .action-btn { padding: 6px 10px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); color: var(--text); cursor: pointer; font-size: 12px; }
-        .action-btn:hover:not(:disabled) { background: var(--code-bg); }
-        .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .grid-canvas { border: 1px solid var(--border); border-radius: 4px; }
+        .ge-container {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .ge-toolbar {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+          padding: 8px;
+          background: var(--code-bg);
+          border: 1px solid var(--border);
+          border-radius: 10px;
+        }
+
+        .ge-tool-group {
+          display: flex;
+          gap: 4px;
+        }
+
+        .ge-tool {
+          width: 32px;
+          height: 32px;
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          background: var(--bg-card);
+          color: var(--text);
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s;
+        }
+
+        .ge-tool:hover:not(:disabled) {
+          background: var(--code-bg);
+          border-color: var(--border-hover);
+          color: var(--text-h);
+        }
+
+        .ge-tool.active {
+          background: var(--primary-dim);
+          border-color: var(--primary);
+          color: var(--primary);
+        }
+
+        .ge-tool:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+
+        .ge-select {
+          padding: 6px 8px;
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          background: var(--bg-card);
+          color: var(--text);
+          font-size: 11px;
+          font-family: inherit;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .ge-select:hover {
+          border-color: var(--border-hover);
+        }
+
+        .ge-select:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+
+        .ge-action {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          padding: 6px 10px;
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          background: var(--bg-card);
+          color: var(--text);
+          cursor: pointer;
+          font-size: 11px;
+          transition: all 0.2s;
+        }
+
+        .ge-action:hover:not(:disabled) {
+          background: var(--code-bg);
+          border-color: var(--border-hover);
+          color: var(--text-h);
+        }
+
+        .ge-action:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+
+        .ge-canvas {
+          border: 1px solid var(--border);
+          border-radius: 10px;
+          background: var(--code-bg);
+        }
       `}</style>
     </div>
   );

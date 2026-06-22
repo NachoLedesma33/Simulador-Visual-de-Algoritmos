@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { getPseudocode, type PseudocodeBlock } from '@/constants/pseudocode';
 
 interface CodePanelProps {
@@ -53,11 +53,13 @@ export function CodePanel({
         <p className="empty-text">Selecciona un algoritmo para ver el pseudocódigo</p>
         <style>{`
           .code-panel {
-            padding: 16px;
+            padding: 14px;
             background: var(--code-bg);
-            border-radius: 8px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
             font-family: var(--mono);
-            font-size: 13px;
+            font-size: 12px;
+            margin-top: 8px;
           }
           .code-panel.empty {
             display: flex;
@@ -65,8 +67,8 @@ export function CodePanel({
             justify-content: center;
           }
           .empty-text {
-            color: var(--text);
-            font-size: 13px;
+            color: var(--text-muted);
+            font-size: 12px;
           }
         `}</style>
       </div>
@@ -75,10 +77,16 @@ export function CodePanel({
 
   return (
     <div className="code-panel">
-      <div className="panel-header">
-        <h3 className="panel-title">{pseudocode.name}</h3>
-        <button className="copy-btn" onClick={handleCopy} title="Copiar">
-          📋
+      <div className="cp-header">
+        <div className="cp-header-left">
+          <span className="cp-badge">PSEUDOCODE</span>
+          <span className="cp-name">{pseudocode.name}</span>
+        </div>
+        <button className="cp-copy-btn" onClick={handleCopy} title="Copiar">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <rect x="4" y="4" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+            <path d="M2 12V3a1 1 0 0 1 1-1h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
         </button>
       </div>
 
@@ -110,14 +118,15 @@ export function CodePanel({
           flex-direction: column;
           padding: 12px;
           background: var(--code-bg);
-          border-radius: 8px;
+          border: 1px solid var(--border);
+          border-radius: 10px;
           font-family: var(--mono);
-          font-size: 13px;
-          max-height: 400px;
+          font-size: 12px;
+          margin-top: 8px;
           overflow: hidden;
         }
 
-        .panel-header {
+        .cp-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -126,71 +135,97 @@ export function CodePanel({
           border-bottom: 1px solid var(--border);
         }
 
-        .panel-title {
-          font-size: 14px;
+        .cp-header-left {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .cp-badge {
+          font-size: 9px;
           font-weight: 600;
-          margin: 0;
+          letter-spacing: 0.1em;
+          color: var(--primary);
+          text-transform: uppercase;
+          background: var(--primary-dim);
+          padding: 2px 6px;
+          border-radius: 4px;
+        }
+
+        .cp-name {
+          font-size: 12px;
+          font-weight: 600;
           color: var(--text-h);
         }
 
-        .copy-btn {
-          padding: 4px 8px;
+        .cp-copy-btn {
+          width: 28px;
+          height: 28px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           background: transparent;
           border: 1px solid var(--border);
-          border-radius: 4px;
+          border-radius: 6px;
           cursor: pointer;
-          font-size: 12px;
+          color: var(--text-muted);
+          transition: all 0.2s;
         }
 
-        .copy-btn:hover {
-          background: var(--border);
+        .cp-copy-btn:hover {
+          background: var(--bg-card);
+          color: var(--text-h);
+          border-color: var(--border-hover);
         }
 
         .code-lines {
           flex: 1;
           overflow-y: auto;
+          max-height: 300px;
         }
 
         .code-line {
           display: flex;
           gap: 8px;
-          padding: 4px 8px;
+          padding: 3px 6px;
           border-radius: 4px;
-          line-height: 1.4;
+          line-height: 1.5;
         }
 
         .code-line.highlighted {
-          background: rgba(251, 191, 36, 0.3);
-          border-left: 3px solid #fbbf24;
+          background: rgba(34, 211, 238, 0.1);
+          border-left: 2px solid var(--primary);
         }
 
         .line-number {
-          min-width: 20px;
-          color: var(--text);
-          opacity: 0.6;
+          min-width: 18px;
+          color: var(--text-muted);
+          opacity: 0.5;
           user-select: none;
+          text-align: right;
+          font-size: 11px;
         }
 
         .line-code {
           flex: 1;
-          color: var(--text-h);
+          color: var(--text);
           white-space: pre;
         }
 
         .line-code .keyword {
-          color: #c084fc;
+          color: #22d3ee;
           font-weight: 500;
         }
 
         .line-code .number {
-          color: #f97316;
+          color: #f43f5e;
         }
 
         .line-comment {
           display: none;
-          font-size: 11px;
-          color: var(--text);
-          opacity: 0.7;
+          font-size: 10px;
+          color: var(--text-muted);
+          font-style: italic;
         }
 
         .code-line.highlighted .line-comment {
@@ -198,23 +233,25 @@ export function CodePanel({
         }
 
         .explanation-box {
-          margin-top: 12px;
-          padding: 8px 12px;
-          background: rgba(251, 191, 36, 0.15);
+          margin-top: 8px;
+          padding: 8px 10px;
+          background: rgba(34, 211, 238, 0.08);
           border-radius: 6px;
-          border-left: 3px solid #fbbf24;
+          border-left: 2px solid var(--primary);
         }
 
         .explanation-label {
           display: block;
-          font-size: 11px;
-          color: var(--text);
-          margin-bottom: 4px;
+          font-size: 10px;
+          color: var(--text-muted);
+          margin-bottom: 2px;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
         }
 
         .explanation-text {
-          font-size: 13px;
-          color: var(--text-h);
+          font-size: 12px;
+          color: var(--text);
         }
       `}</style>
     </div>

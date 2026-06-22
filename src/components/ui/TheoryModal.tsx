@@ -57,14 +57,12 @@ export function TheoryModal({ algorithmType, onClose }: TheoryModalProps) {
 
       for (const [pattern, cls] of keyWordPatterns) {
         formatted = formatted.replace(pattern, (match) =>
-          cls === 'comment'
-            ? `<span class="hl ${cls}">${match}</span>`
-            : `<span class="hl ${cls}">${match}</span>`
+          `<span class="hl ${cls}">${match}</span>`
         );
       }
 
       return (
-        <div key={idx} className="code-line" style={{ paddingLeft: `${Math.max(0, indentLevel) * 12}px` }}>
+        <div key={idx} className="theory-code-line" style={{ paddingLeft: `${Math.max(0, indentLevel) * 12}px` }}>
           <span dangerouslySetInnerHTML={{ __html: formatted || '&nbsp;' }} />
         </div>
       );
@@ -74,7 +72,7 @@ export function TheoryModal({ algorithmType, onClose }: TheoryModalProps) {
   return (
     <div className="theory-overlay" onClick={onClose}>
       <div className="theory-modal" onClick={(e) => e.stopPropagation()}>
-        <button className="close-btn" onClick={onClose} aria-label="Cerrar">
+        <button className="theory-close-btn" onClick={onClose} aria-label="Cerrar">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
           </svg>
@@ -106,29 +104,29 @@ export function TheoryModal({ algorithmType, onClose }: TheoryModalProps) {
 
         <div className="theory-tabs">
           <button
-            className={`tab ${activeTab === 'concept' ? 'active' : ''}`}
+            className={`theory-tab ${activeTab === 'concept' ? 'active' : ''}`}
             onClick={() => setActiveTab('concept')}
           >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="tab-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="theory-tab-icon">
               <circle cx="7" cy="4" r="2" stroke="currentColor" strokeWidth="1.5"/>
               <path d="M3 12.5C3 10.5 5 9 7 9C9 9 11 10.5 11 12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
             Concepto
           </button>
           <button
-            className={`tab ${activeTab === 'code' ? 'active' : ''}`}
+            className={`theory-tab ${activeTab === 'code' ? 'active' : ''}`}
             onClick={() => setActiveTab('code')}
           >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="tab-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="theory-tab-icon">
               <path d="M4 4L1 7L4 10M10 4L13 7L10 10M9 2L5 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
             Pseudocódigo
           </button>
           <button
-            className={`tab ${activeTab === 'usage' ? 'active' : ''}`}
+            className={`theory-tab ${activeTab === 'usage' ? 'active' : ''}`}
             onClick={() => setActiveTab('usage')}
           >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="tab-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="theory-tab-icon">
               <path d="M2 7H12M2 3H12V11H2V3ZM5 2V5M9 2V5M5 9V12M9 9V12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
             Uso
@@ -137,56 +135,65 @@ export function TheoryModal({ algorithmType, onClose }: TheoryModalProps) {
 
         <div className="theory-content">
           {activeTab === 'concept' && (
-            <div className="tab-content">
+            <div className="theory-tab-content">
               <section className="theory-section">
-                <div className="section-header">
-                  <span className="section-icon">💡</span>
+                <div className="theory-section-header">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="theory-section-icon">
+                    <circle cx="12" cy="12" r="10" stroke="#22d3ee" strokeWidth="1.5"/>
+                    <path d="M12 8v4M12 16h0" stroke="#22d3ee" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
                   <h3>¿Qué es?</h3>
                 </div>
-                <p className="section-text">{theory.concept}</p>
+                <p className="theory-section-text">{theory.concept}</p>
               </section>
 
               <section className="theory-section">
-                <div className="section-header">
-                  <span className="section-icon">⚙️</span>
+                <div className="theory-section-header">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="theory-section-icon">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#22d3ee" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
                   <h3>Cómo Funciona</h3>
                 </div>
-                <p className="section-text">{theory.howItWorks}</p>
+                <p className="theory-section-text">{theory.howItWorks}</p>
               </section>
 
               <section className="theory-section">
-                <div className="section-header">
-                  <span className="section-icon">🌍</span>
+                <div className="theory-section-header">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="theory-section-icon">
+                    <circle cx="12" cy="12" r="3" stroke="#22d3ee" strokeWidth="1.5"/>
+                    <path d="M12 1v2M12 21v2M1 12h2M21 12h2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="#22d3ee" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
                   <h3>Ejemplo del Mundo Real</h3>
                 </div>
-                <p className="section-text">{theory.realWorldExample}</p>
+                <p className="theory-section-text">{theory.realWorldExample}</p>
               </section>
             </div>
           )}
 
           {activeTab === 'code' && (
-            <div className="tab-content">
-              <div className="code-header">
-                <span className="code-lang">Pseudocode</span>
-                <span className="code-copy">Copiar</span>
+            <div className="theory-tab-content">
+              <div className="theory-code-header">
+                <span className="theory-code-lang">Pseudocode</span>
               </div>
-              <div className="pseudocode-wrapper">
-                <pre className="pseudocode">{formatPseudocode(theory.pseudocode)}</pre>
+              <div className="theory-pseudocode-wrapper">
+                <pre className="theory-pseudocode">{formatPseudocode(theory.pseudocode)}</pre>
               </div>
             </div>
           )}
 
           {activeTab === 'usage' && (
-            <div className="tab-content">
+            <div className="theory-tab-content">
               <section className="theory-section">
-                <div className="section-header">
-                  <span className="section-icon plus">✓</span>
+                <div className="theory-section-header">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="theory-section-icon">
+                    <path d="M20 6L9 17l-5-5" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
                   <h3>Ventajas</h3>
                 </div>
-                <ul className="list pros">
+                <ul className="theory-list">
                   {theory.advantages.map((adv, idx) => (
-                    <li key={idx}>
-                      <span className="list-marker pros"/>
+                    <li key={idx} className="theory-list-item pros">
+                      <span className="theory-list-marker pros"/>
                       {adv}
                     </li>
                   ))}
@@ -194,14 +201,16 @@ export function TheoryModal({ algorithmType, onClose }: TheoryModalProps) {
               </section>
 
               <section className="theory-section">
-                <div className="section-header">
-                  <span className="section-icon minus">✗</span>
+                <div className="theory-section-header">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="theory-section-icon">
+                    <path d="M18 6L6 18M6 6l12 12" stroke="#f43f5e" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
                   <h3>Desventajas</h3>
                 </div>
-                <ul className="list cons">
+                <ul className="theory-list">
                   {theory.disadvantages.map((disadv, idx) => (
-                    <li key={idx}>
-                      <span className="list-marker cons"/>
+                    <li key={idx} className="theory-list-item cons">
+                      <span className="theory-list-marker cons"/>
                       {disadv}
                     </li>
                   ))}
@@ -209,11 +218,13 @@ export function TheoryModal({ algorithmType, onClose }: TheoryModalProps) {
               </section>
 
               <section className="theory-section">
-                <div className="section-header">
-                  <span className="section-icon">📋</span>
+                <div className="theory-section-header">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="theory-section-icon">
+                    <path d="M12 2v20M2 12h20" stroke="#22d3ee" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
                   <h3>Cuándo Usar Este Algoritmo</h3>
                 </div>
-                <p className="section-text">{theory.whenToUse}</p>
+                <p className="theory-section-text">{theory.whenToUse}</p>
               </section>
             </div>
           )}
@@ -224,17 +235,17 @@ export function TheoryModal({ algorithmType, onClose }: TheoryModalProps) {
         .theory-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(0, 0, 0, 0.5);
-          backdrop-filter: blur(4px);
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(8px);
           display: flex;
           align-items: center;
           justify-content: center;
           z-index: 900;
-          animation: fadeIn 0.2s ease;
+          animation: theoryFadeIn 0.2s ease;
           padding: 20px;
         }
 
-        @keyframes fadeIn {
+        @keyframes theoryFadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
         }
@@ -250,21 +261,21 @@ export function TheoryModal({ algorithmType, onClose }: TheoryModalProps) {
           overflow: hidden;
           display: flex;
           flex-direction: column;
-          animation: slideUp 0.3s ease;
-          box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.35);
+          animation: theorySlideUp 0.3s ease;
+          box-shadow: var(--shadow-lg), 0 0 60px rgba(34, 211, 238, 0.05);
           position: relative;
         }
 
-        @keyframes slideUp {
+        @keyframes theorySlideUp {
           from { transform: translateY(20px) scale(0.98); opacity: 0; }
           to { transform: translateY(0) scale(1); opacity: 1; }
         }
 
-        .close-btn {
+        .theory-close-btn {
           position: absolute;
           top: 16px;
           right: 16px;
-          background: var(--bg);
+          background: var(--bg-card);
           border: 1px solid var(--border);
           cursor: pointer;
           color: var(--text);
@@ -278,10 +289,10 @@ export function TheoryModal({ algorithmType, onClose }: TheoryModalProps) {
           z-index: 10;
         }
 
-        .close-btn:hover {
-          background: var(--danger);
+        .theory-close-btn:hover {
+          background: var(--danger-dim);
           border-color: var(--danger);
-          color: white;
+          color: var(--danger);
         }
 
         .theory-header {
@@ -291,13 +302,13 @@ export function TheoryModal({ algorithmType, onClose }: TheoryModalProps) {
         }
 
         .theory-category {
-          font-size: 11px;
+          font-size: 10px;
           text-transform: uppercase;
-          letter-spacing: 1.2px;
+          letter-spacing: 0.12em;
           color: var(--primary);
           font-weight: 600;
           display: inline-block;
-          background: var(--primary-surface);
+          background: var(--primary-dim);
           padding: 4px 10px;
           border-radius: 6px;
         }
@@ -309,25 +320,27 @@ export function TheoryModal({ algorithmType, onClose }: TheoryModalProps) {
           color: var(--text-h);
           font-family: var(--heading);
           letter-spacing: -0.02em;
+          text-transform: capitalize;
         }
 
         .theory-tabs {
           display: flex;
-          gap: 6px;
-          padding: 4px;
-          background: var(--bg);
+          gap: 4px;
+          padding: 3px;
+          background: var(--bg-card);
+          border: 1px solid var(--border);
           border-radius: 12px;
           margin-bottom: 20px;
           flex-shrink: 0;
         }
 
-        .tab {
+        .theory-tab {
           flex: 1;
-          padding: 10px 14px;
+          padding: 9px 12px;
           border: none;
           background: transparent;
-          color: var(--text);
-          font-size: 13px;
+          color: var(--text-muted);
+          font-size: 12px;
           font-weight: 500;
           border-radius: 9px;
           cursor: pointer;
@@ -338,19 +351,19 @@ export function TheoryModal({ algorithmType, onClose }: TheoryModalProps) {
           gap: 6px;
         }
 
-        .tab-icon {
+        .theory-tab-icon {
           display: none;
         }
 
-        .tab:hover {
-          color: var(--text-h);
+        .theory-tab:hover {
+          color: var(--text);
           background: var(--bg-panel);
         }
 
-        .tab.active {
-          background: var(--bg-panel);
+        .theory-tab.active {
+          background: var(--code-bg);
           color: var(--primary);
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+          border: 1px solid var(--border-hover);
         }
 
         .theory-content {
@@ -359,42 +372,35 @@ export function TheoryModal({ algorithmType, onClose }: TheoryModalProps) {
           padding-right: 4px;
         }
 
-        .tab-content {
-          animation: fadeIn 0.15s ease;
+        .theory-tab-content {
+          animation: theoryFadeIn 0.15s ease;
         }
 
         .theory-section {
-          margin-bottom: 22px;
+          margin-bottom: 20px;
         }
 
         .theory-section:last-child {
           margin-bottom: 0;
         }
 
-        .section-header {
+        .theory-section-header {
           display: flex;
           align-items: center;
           gap: 8px;
           margin-bottom: 10px;
         }
 
-        .section-icon {
-          font-size: 14px;
+        .theory-section-icon {
           width: 24px;
           height: 24px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: var(--code-bg);
+          background: var(--bg-card);
+          border: 1px solid var(--border);
           border-radius: 6px;
-        }
-
-        .section-icon.plus {
-          color: var(--success);
-        }
-
-        .section-icon.minus {
-          color: var(--danger);
+          padding: 4px;
         }
 
         .theory-section h3 {
@@ -404,21 +410,21 @@ export function TheoryModal({ algorithmType, onClose }: TheoryModalProps) {
           margin: 0;
         }
 
-        .section-text {
-          font-size: 14px;
+        .theory-section-text {
+          font-size: 13px;
           line-height: 1.7;
           color: var(--text);
           margin: 0;
           text-align: left;
         }
 
-        .list {
+        .theory-list {
           margin: 0;
           padding-left: 0;
           list-style: none;
         }
 
-        .list li {
+        .theory-list-item {
           font-size: 13px;
           line-height: 1.6;
           color: var(--text);
@@ -429,7 +435,7 @@ export function TheoryModal({ algorithmType, onClose }: TheoryModalProps) {
           text-align: left;
         }
 
-        .list-marker {
+        .theory-list-marker {
           width: 6px;
           height: 6px;
           border-radius: 50%;
@@ -437,82 +443,68 @@ export function TheoryModal({ algorithmType, onClose }: TheoryModalProps) {
           flex-shrink: 0;
         }
 
-        .list-marker.pros {
+        .theory-list-marker.pros {
           background: var(--success);
         }
 
-        .list-marker.cons {
+        .theory-list-marker.cons {
           background: var(--danger);
         }
 
-        .code-header {
+        .theory-code-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
           margin-bottom: 10px;
         }
 
-        .code-lang {
-          font-size: 11px;
+        .theory-code-lang {
+          font-size: 10px;
           font-weight: 600;
           text-transform: uppercase;
-          letter-spacing: 0.5px;
+          letter-spacing: 0.08em;
           color: var(--primary);
-          background: var(--primary-surface);
+          background: var(--primary-dim);
           padding: 4px 10px;
           border-radius: 6px;
         }
 
-        .code-copy {
-          font-size: 12px;
-          color: var(--text);
-          cursor: pointer;
-          padding: 4px 10px;
-          border-radius: 6px;
-          transition: all 0.2s;
-        }
-
-        .code-copy:hover {
-          background: var(--code-bg);
-          color: var(--text-h);
-        }
-
-        .pseudocode-wrapper {
+        .theory-pseudocode-wrapper {
           background: var(--code-bg);
           border: 1px solid var(--border);
           border-radius: 12px;
           overflow: hidden;
         }
 
-        .pseudocode {
+        .theory-pseudocode {
           background: transparent;
           padding: 16px;
           font-family: var(--mono);
           font-size: 12px;
           line-height: 1.7;
-          color: var(--text-h);
+          color: var(--text);
           overflow-x: auto;
           margin: 0;
           max-height: 350px;
         }
 
-        .code-line {
+        .theory-code-line {
           white-space: pre;
           min-height: 1.2em;
         }
 
         .hl { font-weight: 500; }
-        .hl.kw-func { color: #3b82f6; }
+        .hl.kw-func { color: #22d3ee; }
         .hl.kw-control { color: #f59e0b; }
-        .hl.kw-flow { color: #ef4444; }
-        .hl.kw-decl { color: #8b5cf6; }
+        .hl.kw-flow { color: #f43f5e; }
+        .hl.kw-decl { color: #a78bfa; }
         .hl.kw-literal { color: #06b6d4; }
-        .hl.kw-op { color: #a1a1aa; }
-        .hl.kw-action { color: #22c55e; }
+        .hl.kw-op { color: #52525b; }
+        .hl.kw-action { color: #10b981; }
         .hl.kw-type { color: #ec4899; }
-        .hl.comment { color: var(--text); opacity: 0.5; font-style: italic; }
+        .hl.comment { color: var(--text-muted); font-style: italic; }
         .hl.number { color: #f97316; }
-        .hl.string { color: #22c55e; }
+        .hl.string { color: #10b981; }
 
         @media (max-width: 520px) {
           .theory-modal {
@@ -524,7 +516,7 @@ export function TheoryModal({ algorithmType, onClose }: TheoryModalProps) {
             flex-wrap: wrap;
           }
 
-          .tab {
+          .theory-tab {
             min-width: calc(50% - 4px);
           }
         }
